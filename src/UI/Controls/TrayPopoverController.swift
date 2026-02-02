@@ -31,6 +31,7 @@ final class TrayPopoverController {
         } else {
             let anchorRect = button.bounds.offsetBy(dx: 0, dy: anchorYOffset)
             popover.show(relativeTo: anchorRect, of: button, preferredEdge: .minY)
+            popover.contentViewController?.view.window?.makeKey()
             if let window = popover.contentViewController?.view.window {
                 ControlAnimator.fadeIn(window: window, duration: animationDuration)
             }

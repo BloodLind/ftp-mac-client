@@ -4,9 +4,11 @@ import SwiftUI
 @MainActor
 final class TrayPopoverController {
     private(set) var popover: NSPopover
+    private let animationDuration: TimeInterval
 
-    init(rootView: some View, size: NSSize) {
+    init(rootView: some View, size: NSSize, animationDuration: TimeInterval = 0.12) {
         self.popover = TrayPopoverController.createPopoverControl(rootView: rootView, size: size)
+        self.animationDuration = animationDuration
     }
 
     private static func createPopoverControl(rootView: some View, size: NSSize) -> NSPopover {
@@ -15,6 +17,8 @@ final class TrayPopoverController {
         // Hide the little arrow pointing to the status bar item
         popover.setValue(true, forKeyPath: "shouldHideAnchor")
         popover.contentSize = size
+        popover.animates = false
+        popover.appearance = NSApp.effectiveAppearance
         popover.contentViewController = NSViewController()
         popover.contentViewController?.view = NSHostingView(rootView: rootView)
         return popover
@@ -27,7 +31,9 @@ final class TrayPopoverController {
             NSApp.activate(ignoringOtherApps: true)
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
+            if let window = popover.contentViewController?.view.window {
+                ControlAnimator.fadeIn(window: window, duration: animationDuration)
+            }
         }
     }
 }
-

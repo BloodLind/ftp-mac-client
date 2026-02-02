@@ -1,0 +1,130 @@
+# Swift / Xcode (Desktop / macOS) .gitignore
+# Recommended for Xcode projects, Swift Package Manager, CocoaPods, Carthage, fastlane
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must not be committed
+Icon?
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Xcode
+build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+*.xcuserdatad
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcdebugger
+*.moved-aside
+*.hmap
+*.ipa
+
+# User-specific Xcode schemes
+xcshareddata/WorkspaceSettings.xcsettings
+
+# Swift Package Manager
+.build/
+Packages/
+.swiftpm/
+# If you want to track Package.resolved, remove the following line
+Package.resolved
+
+# CocoaPods
+Pods/
+# CocoaPods workspace metadata
+*.xcworkspace
+# If you need to keep Podfile.lock, remove this line
+# Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Realm
+*.realm
+*.realm.lock
+.realm.*
+realm-core-dump-*
+
+# Certificates, keys and provisioning profiles
+*.cer
+*.crt
+*.p12
+*.pem
+*.mobileprovision
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+playground.xcuserstate
+playgroundSharedData/
+
+# Swift playgrounds generated build folder
+Sources/.build/
+
+# Generated docsets
+docset/
+
+# Xcode Server
+.xcscheme
+.xcschememanagement.plist
+.xcserver/
+
+# IDEs / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Archives
+*.xcarchive
+*.dSYM.zip
+*.dSYM
+
+# Temporary files
+tmp/
+temp/
+
+# Generated thumbnails
+*.thumb
+
+# Package manager lock files for other tools (optional)
+# yarn.lock
+# package-lock.json
+
+# Files to ignore for Cocoa projects
+*.nib
+*.moved-aside
+
+# End of file

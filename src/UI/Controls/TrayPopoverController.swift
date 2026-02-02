@@ -5,8 +5,9 @@ import SwiftUI
 final class TrayPopoverController {
     private(set) var popover: NSPopover
     private let animationDuration: TimeInterval
+    public var anchorYOffset: CGFloat = -9
 
-    init(rootView: some View, size: NSSize, animationDuration: TimeInterval = 0.12) {
+    init(rootView: some View, size: NSSize, animationDuration: TimeInterval = 0.12, ) {
         self.popover = TrayPopoverController.createPopoverControl(rootView: rootView, size: size)
         self.animationDuration = animationDuration
     }
@@ -28,9 +29,8 @@ final class TrayPopoverController {
         if popover.isShown {
             popover.performClose(nil)
         } else {
-            NSApp.activate(ignoringOtherApps: true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            let anchorRect = button.bounds.offsetBy(dx: 0, dy: anchorYOffset)
+            popover.show(relativeTo: anchorRect, of: button, preferredEdge: .minY)
             if let window = popover.contentViewController?.view.window {
                 ControlAnimator.fadeIn(window: window, duration: animationDuration)
             }

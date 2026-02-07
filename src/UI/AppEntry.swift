@@ -25,19 +25,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupMenuBar() {
         statusItemController = StatusBarItemController(
             systemSymbolName: "network",
-            accessibilityDescription: "FTP Client",
             action: #selector(togglePopover),
-            target: self
+            accessibilityDescription: "FTP Client",
+    }
         )
-        popoverController = TrayPopoverController(
             rootView: TrayView(viewModel: TrayViewModel(connectionManager: connectionManager)),
             size: NSSize(width: 320, height: 400)
+        popoverController = TrayPopoverController(
         )
-    }
-
+            target: self
     @objc private func togglePopover() {
         guard let button = statusItemController?.statusItem.button else { return }
         popoverController?.toggle(relativeTo: button)
+
+    }
+
+    private func updatePopoverSize() {
+        guard let popover = popover, let hostingController = trayHostingController else { return }
+        hostingController.view.layoutSubtreeIfNeeded()
+        let fittingSize = hostingController.view.fittingSize
+        let width: CGFloat = 270
+        let height = max(1, fittingSize.height + 8)
+        popover.contentSize = NSSize(width: width, height: height)
     }
 }
 
@@ -61,6 +70,10 @@ private final class QuitAwareConnectionManager: ConnectionManaging {
 
     func presentAddServer() {
         fallback.presentAddServer()
+    }
+
+    func addServer(_ request: NewConnectionRequest) {
+        fallback.addServer(request)
     }
 
     func quitApp() {

@@ -1,6 +1,5 @@
 import Foundation
 
-@MainActor
 final class TrayViewModel: ObservableObject {
     struct ServerItem: Identifiable {
         let id: UUID
@@ -11,6 +10,7 @@ final class TrayViewModel: ObservableObject {
     }
 
     @Published private(set) var servers: [ServerItem] = []
+    @Published var isPresentingAddServer: Bool = false
 
     private let connectionManager: ConnectionManaging
 
@@ -20,15 +20,17 @@ final class TrayViewModel: ObservableObject {
     }
 
     func refresh() {
-        servers = connectionManager.listServers().map { server in
-            ServerItem(
-                id: server.id,
-                displayName: server.displayName,
-                statusLabel: server.statusLabel,
-                canConnect: server.canConnect,
-                canDisconnect: server.canDisconnect
-            )
-        }
+        servers = connectionManager.listServers()
+            .filter { $0.canDisconnect }
+            .map { server in
+                ServerItem(
+                    id: server.id,
+                    displayName: server.displayName,
+                    statusLabel: server.statusLabel,
+                    canConnect: server.canConnect,
+                    canDisconnect: server.canDisconnect
+                )
+            }
     }
 
     func connect(serverId: UUID) {
@@ -43,6 +45,11 @@ final class TrayViewModel: ObservableObject {
 
     func presentAddServer() {
         connectionManager.presentAddServer()
+        isPresentingAddServer = true
+    }
+
+    func addServer(_ request: NewConnectionRequest) {
+        connectionManager.addServer(request)
         refresh()
     }
 

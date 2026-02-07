@@ -5,6 +5,7 @@ protocol ConnectionManaging {
     func connect(serverId: UUID)
     func disconnect(serverId: UUID)
     func presentAddServer()
+    func addServer(_ request: NewConnectionRequest)
     func quitApp()
 }
 
@@ -17,20 +18,29 @@ struct ServerSummary {
 }
 
 final class PreviewConnectionManager: ConnectionManaging {
-    func listServers() -> [ServerSummary] {
-        [
-            ServerSummary(
-                id: UUID(),
-                displayName: "Example FTP",
-                statusLabel: "Disconnected",
-                canConnect: true,
-                canDisconnect: false
-            )
-        ]
+    private let store: MockConnectionStore
+
+    init(store: MockConnectionStore = .shared) {
+        self.store = store
     }
 
-    func connect(serverId: UUID) {}
-    func disconnect(serverId: UUID) {}
+    func listServers() -> [ServerSummary] {
+        store.listSummaries()
+    }
+
+    func connect(serverId: UUID) {
+        store.connect(id: serverId)
+    }
+
+    func disconnect(serverId: UUID) {
+        store.disconnect(id: serverId)
+    }
+
     func presentAddServer() {}
+
+    func addServer(_ request: NewConnectionRequest) {
+        store.addConnection(request: request)
+    }
+
     func quitApp() {}
 }

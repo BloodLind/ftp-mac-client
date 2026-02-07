@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FTP Client Menu Bar Dropdown</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "macos-active": "#007AFF", // Native macOS Blue
+                        "macos-active-dark": "#1A6DCB",
+                        "menu-bg-light": "rgba(255, 255, 255, 0.85)",
+                        "menu-bg-dark": "rgba(30, 30, 30, 0.75)",
+                        "divider-light": "rgba(0, 0, 0, 0.08)",
+                        "divider-dark": "rgba(255, 255, 255, 0.12)",
+                        "text-primary-light": "#1d1d1f",
+                        "text-primary-dark": "#f5f5f7",
+                        "text-secondary-light": "#86868b",
+                        "text-secondary-dark": "#98989d",
+                    },
+                    fontFamily: {
+                        sans: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'macos-menu': '0 10px 40px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.1)',
+                        'macos-menu-dark': '0 10px 40px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.1)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .macos-glass {
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+        }
+        .menu-item {
+            transition: background-color 0.05s ease;
+        }
+        .menu-item:hover {
+            background-color: var(--macos-active, #007AFF);
+            border-radius: 4px;
+        }
+        .menu-item:hover * {
+            color: white !important;
+            fill: white !important;
+        }
+        .menu-item:hover .shortcut {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+        .menu-item:active {
+            background-color: #0063ce;
+        }
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+            cursor: default;
+        }
+    </style>
+</head>
+<body class="bg-[#e0e0e0] dark:bg-[#222] min-h-screen flex items-start justify-center pt-20 font-sans p-6 relative overflow-hidden transition-colors duration-300 bg-[url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&amp;w=3270&amp;auto=format&amp;fit=crop')] bg-cover bg-center">
+<div class="absolute inset-0 bg-white/10 dark:bg-black/40 backdrop-blur-[2px]"></div>
+<button class="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-white/90 dark:bg-gray-800/90 shadow-lg backdrop-blur-md border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:scale-105 transition-transform" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-symbols-outlined text-xl leading-none">dark_mode</span>
+</button>
+<div class="relative z-10 w-[270px]">
+<div class="macos-glass rounded-lg bg-menu-bg-light dark:bg-menu-bg-dark shadow-macos-menu dark:shadow-macos-menu-dark overflow-hidden flex flex-col p-1 border border-white/20 dark:border-white/10">
+<div class="flex flex-col gap-[2px]">
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2 overflow-hidden">
+<span class="w-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] font-bold text-text-primary-light dark:text-text-primary-dark group-hover:text-white leading-none">check</span>
+</span>
+<span class="text-[13px] font-medium text-text-primary-light dark:text-text-primary-dark group-hover:text-white truncate">Production FTP</span>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white hover:bg-black/10 dark:hover:bg-white/20 rounded-[3px] p-0.5 transition-colors" title="Disconnect">eject</span>
+</div>
+</div>
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2 overflow-hidden">
+<span class="w-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] font-bold text-text-primary-light dark:text-text-primary-dark group-hover:text-white leading-none">check</span>
+</span>
+<span class="text-[13px] font-medium text-text-primary-light dark:text-text-primary-dark group-hover:text-white truncate">Work Server</span>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white hover:bg-black/10 dark:hover:bg-white/20 rounded-[3px] p-0.5 transition-colors" title="Disconnect">eject</span>
+</div>
+</div>
+</div>
+<div class="h-[1px] bg-divider-light dark:bg-divider-dark mx-3 my-1"></div>
+<div class="flex flex-col gap-[2px]">
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2">
+<span class="w-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white leading-none">add</span>
+</span>
+<span class="text-[13px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white">Add New Connection...</span>
+</div>
+<span class="shortcut text-[12px] tracking-wide text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white/90">⌘N</span>
+</div>
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2">
+<span class="w-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white leading-none">table_view</span>
+</span>
+<span class="text-[13px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white">Open Manage Window</span>
+</div>
+<span class="shortcut text-[12px] tracking-wide text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white/90">⌘M</span>
+</div>
+</div>
+<div class="h-[1px] bg-divider-light dark:bg-divider-dark mx-3 my-1"></div>
+<div class="flex flex-col">
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2">
+<span class="w-4 flex items-center justify-center">
+</span>
+<span class="text-[13px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white">Quit FTP Client</span>
+</div>
+<span class="shortcut text-[12px] tracking-wide text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white/90">⌘Q</span>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

@@ -18,7 +18,8 @@
 
 ### UI Module
 - Purpose: Presentation only.
-- Files: `src/UI/TrayView.swift`, `src/UI/ViewModels/TrayViewModel.swift`, `src/UI/Controls/*`.
+- Files: `src/UI/TrayView.swift`, `src/UI/Controls/*`.
+- View models: `src/Core/Domain/ViewModels/*`.
 - Rules:
   1. All layout is in views.
   2. All commands and state live in view models.

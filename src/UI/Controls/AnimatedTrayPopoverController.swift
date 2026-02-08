@@ -2,13 +2,13 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class TrayPopoverController {
+final class AnimatedTrayPopoverController {
     private(set) var popover: NSPopover
     private let animationDuration: TimeInterval
     public var anchorYOffset: CGFloat = -9
 
     init(rootView: some View, size: NSSize, animationDuration: TimeInterval = 0.12, ) {
-        self.popover = TrayPopoverController.createPopoverControl(rootView: rootView, size: size)
+        self.popover = AnimatedTrayPopoverController.createPopoverControl(rootView: rootView, size: size)
         self.animationDuration = animationDuration
     }
 

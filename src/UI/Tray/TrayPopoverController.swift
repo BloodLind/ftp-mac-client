@@ -26,6 +26,8 @@ final class TrayPopoverController: NSObject, NSPopoverDelegate {
         let hostingController = NSHostingController(rootView: TrayView(viewModel: viewModel, navigation: navigation))
         self.hostingController = hostingController
         super.init()
+        hostingController.view.wantsLayer = true
+        hostingController.view.layer?.backgroundColor = NSColor.clear.cgColor
         popover.contentViewController = hostingController
         popover.delegate = self
     }

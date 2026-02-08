@@ -15,8 +15,10 @@ struct FTPClientApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusBarItemController?
-    private var popoverController: TrayPopoverController?
+    private var trayMenuController: TrayMenuController?
     private let connectionManager = QuitAwareConnectionManager()
+    private let navigator: any NavigationPresenter
+
     override init() {
         var registry = NavigationViewRegistry()
         Self.setupViewRegistry(&registry)
@@ -25,7 +27,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             rootContainer: MainRootView.rootContainer
         )
         navigator = presenter
-        Self.navigationPresenter = presenter
         GlobalNavigation.presenter = presenter
         super.init()
     }
@@ -42,23 +43,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupMenuBar() {
+        let viewModel = TrayViewModel(connectionManager: connectionManager, navigator: navigator)
+        trayMenuController = TrayMenuController(viewModel: viewModel)
+
         statusItemController = StatusBarItemController(
             systemSymbolName: "network",
-            action: #selector(togglePopover),
-            accessibilityDescription: "FTP Client"
+            accessibilityDescription: "FTP Client",
+            action: nil,
+            target: nil,
+            menu: trayMenuController?.menu
         )
-        let viewModel = TrayViewModel(connectionManager: connectionManager, navigator: navigator)
-        trayPopoverController = TrayPopoverController(viewModel: viewModel, navigation: navigator)
-    }
-        )
-            rootView: TrayView(viewModel: TrayViewModel(connectionManager: connectionManager)),
-            size: NSSize(width: 320, height: 400)
-        popoverController = TrayPopoverController(
-        )
-            target: self
-    @objc private func togglePopover() {
-        guard let button = statusItem?.button else { return }
-        trayPopoverController?.toggle(relativeTo: button)
     }
 }
 

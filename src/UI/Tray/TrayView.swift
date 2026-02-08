@@ -20,38 +20,37 @@ struct TrayView: NavigableView {
     }
 
     var body: some View {
-        TrayMenuContainer {
-            VStack(spacing: 6) {
-                TrayServerSectionView(
-                    servers: viewModel.servers,
-                    onConnect: viewModel.connect,
-                    onDisconnect: viewModel.disconnect
-                )
-                TrayMenuDivider()
-                TrayMenuRow(
-                    title: "Add New Connection...",
-                    leadingSymbol: "plus",
-                    shortcut: "⌘N",
-                    action: viewModel.presentAddServer
-                )
-                TrayMenuRow(
-                    title: "Open Manage Window",
-                    leadingSymbol: "tablecells",
-                    shortcut: "⌘M",
-                    action: viewModel.openManageWindow
-                )
-                TrayMenuDivider()
-                TrayMenuRow(
-                    title: "Quit FTP Client",
-                    leadingSymbol: nil,
-                    shortcut: "⌘Q",
-                    action: viewModel.quitApp
-                )
-            }
-            .padding(6)
+        VStack(spacing: 6) {
+            TrayServerSectionView(
+                servers: viewModel.servers,
+                onConnect: viewModel.connect,
+                onDisconnect: viewModel.disconnect
+            )
+            TrayMenuDivider()
+            TrayMenuRow(
+                title: "Add New Connection...",
+                leadingSymbol: "plus",
+                shortcut: "⌘N",
+                action: viewModel.presentAddServer
+            )
+            TrayMenuRow(
+                title: "Open Manage Window",
+                leadingSymbol: "tablecells",
+                shortcut: "⌘M",
+                action: viewModel.openManageWindow
+            )
+            TrayMenuDivider()
+            TrayMenuRow(
+                title: "Quit FTP Client",
+                leadingSymbol: nil,
+                shortcut: "⌘Q",
+                action: viewModel.quitApp
+            )
         }
+        .padding(6)
         .frame(width: 270)
         .fixedSize(horizontal: false, vertical: true)
+        .background(Color.clear)
     }
 }
 
@@ -61,33 +60,9 @@ struct TrayView_Previews: PreviewProvider {
     }
 }
 
-struct TrayMenuContainer<Content: View>: View {
-    @Environment(\.colorScheme) private var colorScheme
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        content
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(Color.white.opacity(colorScheme == .dark ? 0.12 : 0.2), lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.4 : 0.15), radius: 18, x: 0, y: 8)
-    }
-}
-
 struct TrayMenuDivider: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        Rectangle()
-            .fill(Color.white.opacity(colorScheme == .dark ? 0.12 : 0.08))
-            .frame(height: 1)
+        Divider()
             .padding(.horizontal, 8)
             .padding(.vertical, 2)
     }
@@ -167,6 +142,8 @@ struct TrayMenuRow: View {
     let trailingEnabled: Bool
 
     @State private var isHovering = false
+    private let highlightedTextColor = Color(nsColor: .selectedMenuItemTextColor)
+    private let highlightBackgroundColor = Color(nsColor: .selectedContentBackgroundColor)
 
     init(
         title: String,
@@ -208,8 +185,9 @@ struct TrayMenuRow: View {
             }
         }
         .onHover { isHovering = $0 }
-        .background(isHovering ? Color.accentColor : Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .background(isHovering ? highlightBackgroundColor : Color.clear)
+        .foregroundStyle(isHovering ? highlightedTextColor : Color.primary)
+        .clipShape(Rectangle())
         .padding(.horizontal, 4)
     }
 }
@@ -227,8 +205,7 @@ struct TrayMenuRowContent: View {
         HStack(spacing: 8) {
             TrayMenuIcon(symbol: leadingSymbol, isHighlighted: isHighlighted)
             Text(title)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(isHighlighted ? .white : .primary)
+                .foregroundColor(isHighlighted ? Color(nsColor: .selectedMenuItemTextColor) : .primary)
                 .lineLimit(1)
             Spacer(minLength: 8)
             if let trailingSymbol {
@@ -241,8 +218,7 @@ struct TrayMenuRowContent: View {
             }
             if let shortcut {
                 Text(shortcut)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(isHighlighted ? Color.white.opacity(0.85) : .secondary)
+                    .foregroundColor(isHighlighted ? Color(nsColor: .selectedMenuItemTextColor) : .secondary)
             }
         }
         .padding(.horizontal, 8)
@@ -259,8 +235,7 @@ struct TrayMenuIcon: View {
             Color.clear
             if let symbol {
                 Image(systemName: symbol)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(isHighlighted ? .white : .primary)
+                    .foregroundColor(isHighlighted ? Color(nsColor: .selectedMenuItemTextColor) : .primary)
             }
         }
         .frame(width: 16, height: 16)
@@ -278,16 +253,14 @@ struct TrayMenuTrailingButton: View {
             if let action {
                 Button(action: action) {
                     Image(systemName: symbol)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(isHighlighted ? .white : .secondary)
+                        .foregroundColor(isHighlighted ? Color(nsColor: .selectedMenuItemTextColor) : .secondary)
                         .padding(4)
                 }
                 .buttonStyle(.plain)
                 .disabled(!isEnabled)
             } else {
                 Image(systemName: symbol)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(isHighlighted ? .white : .secondary)
+                    .foregroundColor(isHighlighted ? Color(nsColor: .selectedMenuItemTextColor) : .secondary)
             }
         }
     }

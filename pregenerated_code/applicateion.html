@@ -1,0 +1,1547 @@
+<!-- Liquid Glass Toolbar Popover - Final V2 -->
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FTP Client Main Management Window</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007AFF", // Updated to Apple HIG Blue
+                        "background-light": "#f5f5f7",
+                        "background-dark": "#000000",
+                        "glass-light": "rgba(255, 255, 255, 0.85)",
+                        "glass-dark": "rgba(30, 30, 30, 0.75)",
+                        "glass-border-light": "rgba(255, 255, 255, 0.5)",
+                        "glass-border-dark": "rgba(255, 255, 255, 0.15)",
+                        "sapphire-glass": "rgba(0, 122, 255, 0.15)",
+                        "sapphire-border": "rgba(0, 122, 255, 0.3)",
+                        "ruby-glass": "rgba(255, 59, 48, 0.15)",
+                        "ruby-border": "rgba(255, 59, 48, 0.3)",
+                        "sidebar-light": "rgba(235, 235, 240, 0.4)", // Very subtle sidebar background
+                        "sidebar-dark": "rgba(40, 40, 45, 0.4)",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                        body: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "0.75rem", // Slightly tighter for newer macOS look
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                    },
+                    backdropBlur: {
+                        'xs': '2px',
+                        'xl': '24px',
+                        '2xl': '50px', // Deeper blur
+                        '3xl': '80px', // Vibrant blur
+                    },
+                    boxShadow: {
+                        'glass-light': '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
+                        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.6)',
+                        'window': '0 20px 60px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+                        'window-dark': '0 20px 60px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+                        'modal-glass': '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.3) inset',
+                        'input-inner': 'inset 0 1px 2px rgba(0,0,0,0.06)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .liquid-window {
+            backdrop-filter: blur(60px) saturate(180%);
+            -webkit-backdrop-filter: blur(60px) saturate(180%);
+            box-shadow: var(--tw-shadow-window);
+        }
+        .dark .liquid-window {
+            box-shadow: var(--tw-shadow-window-dark);
+        }
+        .vibrant-sidebar {
+            background-color: var(--tw-colors-sidebar-light);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .dark .vibrant-sidebar {
+            background-color: var(--tw-colors-sidebar-dark);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .liquid-btn-small {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4); 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .liquid-btn-small {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .liquid-btn-small:hover {
+            background: rgba(255, 255, 255, 0.65);
+            transform: scale(1.05);
+        }
+        .dark .liquid-btn-small:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .sapphire-btn {
+            background: #007AFF;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .sapphire-btn:hover {
+            background: #006add;
+            transform: translateY(-0.5px);
+        }
+        .ruby-text-btn {
+            color: rgba(60, 60, 67, 0.6);
+            transition: all 0.2s ease;
+        }
+        .dark .ruby-text-btn {
+            color: rgba(235, 235, 245, 0.6);
+        }
+        .ruby-text-btn:hover {
+            color: #FF3B30;
+            background: rgba(255, 59, 48, 0.08);
+        }
+        .sidebar-item-active {
+            background: rgba(0, 122, 255, 0.12);
+            color: #007AFF;
+        }
+        .dark .sidebar-item-active {
+            background: rgba(10, 132, 255, 0.2);
+            color: #0A84FF;
+        }
+        .table-row-hover:hover {
+            background-color: rgba(0,0,0,0.03);
+        }
+        .dark .table-row-hover:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.4); }
+            70% { box-shadow: 0 0 0 3px rgba(52, 199, 89, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+        }
+        .status-pulse { animation: pulse-green 3s infinite; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }.glass-input {
+            background: rgba(0, 0, 0, 0.05);border: none;box-shadow: var(--tw-shadow-input-inner);backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+        }
+        .dark .glass-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.5);}
+        .dark .glass-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.5);
+        }
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #34C759;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #34C759;
+        }
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(2px);
+        }
+        .dark .modal-overlay {
+            background: rgba(0, 0, 0, 0.4);
+        }.native-tab-container {
+            background: rgba(118, 118, 128, 0.12);
+            border-radius: 8px;
+            padding: 2px;
+        }
+        .dark .native-tab-container {
+            background: rgba(118, 118, 128, 0.24);
+        }
+        .native-tab-active {
+            background: #FFFFFF;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+            color: #000000;
+            border-radius: 6px;
+        }
+        .dark .native-tab-active {
+            background: #636366;
+            color: #FFFFFF;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+        .native-tab-inactive {
+            color: #000000;
+        }
+        .dark .native-tab-inactive {
+            color: #FFFFFF;
+        }
+        .glass-btn-inset {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05), 0 1px 0 rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+        .dark .glass-btn-inset {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .glass-btn-inset:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+        .dark .glass-btn-inset:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center font-display p-6 relative overflow-hidden transition-colors duration-300 selection:bg-blue-500/30">
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[80%] h-[80%] rounded-full bg-blue-400/10 blur-[160px] dark:bg-blue-600/10 animate-pulse" style="animation-duration: 12s;"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full bg-indigo-300/10 blur-[160px] dark:bg-indigo-600/10 animate-pulse" style="animation-duration: 15s;"></div>
+</div>
+<button class="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-white/50 dark:bg-black/50 shadow-lg backdrop-blur-md border border-white/40 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:scale-105 transition-transform group" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">brightness_4</span>
+</button>
+<div class="relative z-10 w-full max-w-5xl h-[700px] flex">
+<div class="liquid-window w-full h-full rounded-2xl bg-glass-light dark:bg-glass-dark overflow-hidden flex relative ring-1 ring-black/5 dark:ring-white/10">
+<div class="w-[260px] vibrant-sidebar flex flex-col pt-5 pb-4 shrink-0 backdrop-blur-3xl z-10">
+<div class="px-5 mb-8 flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-[#FF5F57] border border-[#E0443E] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-[#FEBC2E] border border-[#D89E24] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-[#28C840] border border-[#1AAB29] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+</div>
+<div class="flex-1 px-3 space-y-6 overflow-y-auto no-scrollbar">
+<div>
+<h3 class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-3">Library</h3>
+<div class="space-y-0.5">
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg sidebar-item-active font-medium transition-colors group">
+<span class="material-symbols-outlined text-[20px]">dns</span>
+<span class="text-sm">Active Connections</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">bookmark</span>
+<span class="text-sm">Saved Servers</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">history</span>
+<span class="text-sm">History</span>
+</button>
+</div>
+</div>
+</div>
+<div class="px-3 mt-4">
+<button class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">settings</span>
+<span class="text-sm">Settings</span>
+</button>
+</div>
+</div>
+<div class="flex-1 flex flex-col bg-white/40 dark:bg-black/40 backdrop-blur-xl relative">
+<div class="h-14 flex items-center justify-between px-6 border-b border-black/5 dark:border-white/5 shrink-0">
+<h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100 tracking-tight">Active Connections</h1>
+</div>
+<div class="grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider select-none">
+<div class="col-span-1">Status</div>
+<div class="col-span-5">Server Name</div>
+<div class="col-span-3">Protocol</div>
+<div class="col-span-3 text-right">Speed / Action</div>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1">
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+<span class="material-symbols-outlined text-[18px]">public</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">Production Server</div>
+<div class="text-[11px] text-gray-500 truncate">192.168.1.42</div>
+</div>
+</div>
+<div class="col-span-3 text-sm text-gray-500 dark:text-gray-400">SFTP (SSH)</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded">24 MB/s</span>
+<div class="flex gap-2">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-blue-500" title="Reconnect">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-red-500" title="Disconnect">
+<span class="material-symbols-outlined text-[16px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+<span class="material-symbols-outlined text-[18px]">storage</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">Staging Database</div>
+<div class="text-[11px] text-gray-500 truncate">10.0.0.51</div>
+</div>
+</div>
+<div class="col-span-3 text-sm text-gray-500 dark:text-gray-400">FTP</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">8 MB/s</span>
+<div class="flex gap-2">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-blue-500" title="Reconnect">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-red-500" title="Disconnect">
+<span class="material-symbols-outlined text-[16px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 shrink-0">
+<span class="material-symbols-outlined text-[18px]">cloud</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-sm opacity-60 truncate">Backup Assets</div>
+<div class="text-[11px] text-gray-500 truncate">aws-east-1</div>
+</div>
+</div>
+<div class="col-span-3 text-sm text-gray-500 dark:text-gray-400">S3 Bucket</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs text-gray-400">—</span>
+<div class="flex gap-2">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-primary" title="Reconnect">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-red-500 opacity-50 cursor-not-allowed" disabled="" title="Disconnect">
+<span class="material-symbols-outlined text-[16px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-500 shrink-0">
+<span class="material-symbols-outlined text-[18px]">folder_shared</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-sm opacity-60 truncate">Legacy Share</div>
+<div class="text-[11px] text-gray-500 truncate">192.168.1.100</div>
+</div>
+</div>
+<div class="col-span-3 text-sm text-gray-500 dark:text-gray-400">SMB</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs text-gray-400">—</span>
+<div class="flex gap-2">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-primary" title="Reconnect">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-red-500 opacity-50 cursor-not-allowed" disabled="" title="Disconnect">
+<span class="material-symbols-outlined text-[16px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="h-16 border-t border-black/5 dark:border-white/5 flex items-center justify-between px-6 shrink-0 bg-white/40 dark:bg-black/20 backdrop-blur-md">
+<button class="ruby-text-btn h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-red-500/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                        Quit
+                    </button>
+<div class="flex items-center gap-4">
+<div class="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                            2 Active • 4 Saved
+                        </div>
+<button class="sapphire-btn h-9 px-5 rounded-lg text-white text-sm font-medium flex items-center gap-2 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Add Connection
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute inset-0 z-50 flex items-center justify-center modal-overlay">
+<div class="w-[420px] rounded-2xl bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-3xl shadow-modal-glass border border-white/40 dark:border-white/10 ring-1 ring-black/5 p-6 transform transition-all scale-100 opacity-100 flex flex-col gap-5">
+<div class="flex items-center justify-between">
+<h2 class="text-lg font-semibold text-gray-900 dark:text-white tracking-tight">Add Connection</h2>
+</div>
+<div class="space-y-4">
+<div class="native-tab-container flex">
+<button class="flex-1 py-1 text-[13px] font-medium native-tab-active transition-all">SFTP</button>
+<button class="flex-1 py-1 text-[13px] font-medium native-tab-inactive hover:text-gray-600 dark:hover:text-gray-300 transition-all">FTP</button>
+<button class="flex-1 py-1 text-[13px] font-medium native-tab-inactive hover:text-gray-600 dark:hover:text-gray-300 transition-all">S3</button>
+<button class="flex-1 py-1 text-[13px] font-medium native-tab-inactive hover:text-gray-600 dark:hover:text-gray-300 transition-all">SMB</button>
+</div>
+<div class="flex gap-3">
+<div class="flex-1 space-y-1">
+<label class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide ml-1">Host <span class="text-red-500 ml-0.5">*</span></label>
+<input class="w-full h-9 px-3 rounded-lg text-sm glass-input placeholder-gray-400 dark:placeholder-gray-600" placeholder="ftp.example.com" type="text"/>
+</div>
+<div class="w-20 space-y-1">
+<label class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide ml-1">Port <span class="text-red-500 ml-0.5">*</span></label>
+<input class="w-full h-9 px-3 text-center rounded-lg text-sm glass-input placeholder-gray-400 dark:placeholder-gray-600" placeholder="22" type="text"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide ml-1">Username <span class="text-gray-400 font-normal normal-case ml-1">(Optional)</span></label>
+<input class="w-full h-9 px-3 rounded-lg text-sm glass-input placeholder-gray-400 dark:placeholder-gray-600" placeholder="user" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide ml-1">Password <span class="text-gray-400 font-normal normal-case ml-1">(Optional)</span></label>
+<input class="w-full h-9 px-3 rounded-lg text-sm glass-input placeholder-gray-400 dark:placeholder-gray-600" placeholder="••••••••" type="password"/>
+</div>
+<div class="h-px bg-gray-200 dark:bg-white/10 my-1"></div>
+<div class="space-y-1 opacity-100 transition-opacity duration-300">
+<label class="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide ml-1">Connection Name</label>
+<div class="flex gap-2">
+<button class="w-9 h-9 rounded-lg flex items-center justify-center glass-btn-inset cursor-pointer" type="button">
+<span class="text-lg">📁</span>
+</button>
+<input class="flex-1 h-9 px-3 rounded-lg text-sm glass-input placeholder-gray-400 dark:placeholder-gray-600" placeholder="My Server" type="text"/>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="text-sm font-medium text-gray-700 dark:text-gray-200">Save Connection</span>
+<div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 dark:border-gray-500 shadow-sm transition-all duration-300 ease-in-out" id="save-toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 dark:bg-gray-600 cursor-pointer transition-colors duration-300" for="save-toggle"></label>
+</div>
+</div>
+</div>
+<div class="flex gap-3 pt-3">
+<button class="flex-1 h-9 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-600 dark:text-white text-sm font-medium transition-colors shadow-sm border border-black/5 dark:border-white/5 active:scale-95">
+                Cancel
+            </button>
+<button class="flex-1 h-9 rounded-full bg-[#007AFF] hover:bg-[#006add] text-white text-sm font-medium shadow-md shadow-blue-500/20 transition-all active:scale-95 border-t border-white/20">
+                Connect
+            </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>
+
+<!-- Liquid Glass Toolbar Popover - Final V2 -->
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FTP Client Settings View</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007AFF", // Updated to Apple HIG Blue
+                        "background-light": "#f5f5f7",
+                        "background-dark": "#000000",
+                        "glass-light": "rgba(255, 255, 255, 0.85)",
+                        "glass-dark": "rgba(30, 30, 30, 0.75)",
+                        "glass-border-light": "rgba(255, 255, 255, 0.5)",
+                        "glass-border-dark": "rgba(255, 255, 255, 0.15)",
+                        "sidebar-light": "rgba(235, 235, 240, 0.4)",
+                        "sidebar-dark": "rgba(40, 40, 45, 0.4)",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                        body: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                    },
+                    boxShadow: {
+                        'glass-light': '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
+                        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.6)',
+                        'window': '0 20px 60px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+                        'window-dark': '0 20px 60px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+                        'inner-depth': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .liquid-window {
+            backdrop-filter: blur(60px) saturate(180%);
+            -webkit-backdrop-filter: blur(60px) saturate(180%);
+            box-shadow: var(--tw-shadow-window);
+        }
+        .dark .liquid-window {
+            box-shadow: var(--tw-shadow-window-dark);
+        }
+        .vibrant-sidebar {
+            background-color: var(--tw-colors-sidebar-light);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .dark .vibrant-sidebar {
+            background-color: var(--tw-colors-sidebar-dark);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .liquid-btn-small {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4); 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .liquid-btn-small {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .liquid-btn-small:hover {
+            background: rgba(255, 255, 255, 0.65);
+            transform: scale(1.05);
+        }
+        .dark .liquid-btn-small:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .sapphire-btn {
+            background: #007AFF;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .sapphire-btn:hover {
+            background: #006add;
+            transform: translateY(-0.5px);
+        }
+        .ruby-text-btn {
+            color: rgba(60, 60, 67, 0.6);
+            transition: all 0.2s ease;
+        }
+        .dark .ruby-text-btn {
+            color: rgba(235, 235, 245, 0.6);
+        }
+        .ruby-text-btn:hover {
+            color: #FF3B30;
+            background: rgba(255, 59, 48, 0.08);
+        }
+        .sidebar-item-active {
+            background: rgba(0, 122, 255, 0.12);
+            color: #007AFF;
+        }
+        .dark .sidebar-item-active {
+            background: rgba(10, 132, 255, 0.2);
+            color: #0A84FF;
+        }.liquid-input-container {
+            background: rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+        }
+        .dark .liquid-input-container {
+            background: rgba(0, 0, 0, 0.2);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.05);
+        }.liquid-toggle-bg {
+            background: rgba(120, 120, 128, 0.16);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            transition: background 0.3s ease;
+        }
+        .dark .liquid-toggle-bg {
+            background: rgba(120, 120, 128, 0.32);
+        }
+        .liquid-toggle-dot {
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 1px rgba(0, 0, 0, 0.06);
+            background: white;
+        }
+        .peer:checked ~ .liquid-toggle-bg {
+            background: #007AFF;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        }.liquid-capsule-btn {
+            background: linear-gradient(180deg, rgba(59,130,246,0.8) 0%, rgba(37,99,235,0.9) 100%);
+            box-shadow: 
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                0 4px 12px rgba(37,99,235,0.25),
+                0 2px 4px rgba(0,0,0,0.1);
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+        }
+        .liquid-capsule-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+            box-shadow: 
+                inset 0 1px 0 rgba(255,255,255,0.4),
+                0 6px 16px rgba(37,99,235,0.3),
+                0 2px 4px rgba(0,0,0,0.1);
+        }
+        .liquid-capsule-btn:active {
+            transform: translateY(0);
+            filter: brightness(0.95);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center font-display p-6 relative overflow-hidden transition-colors duration-300 selection:bg-blue-500/30">
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[80%] h-[80%] rounded-full bg-blue-400/10 blur-[160px] dark:bg-blue-600/10 animate-pulse" style="animation-duration: 12s;"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full bg-indigo-300/10 blur-[160px] dark:bg-indigo-600/10 animate-pulse" style="animation-duration: 15s;"></div>
+</div>
+<button class="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-white/50 dark:bg-black/50 shadow-lg backdrop-blur-md border border-white/40 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:scale-105 transition-transform group" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">brightness_4</span>
+</button>
+<div class="relative z-10 w-full max-w-5xl h-[700px] flex">
+<div class="liquid-window w-full h-full rounded-2xl bg-glass-light dark:bg-glass-dark overflow-hidden flex relative ring-1 ring-black/5 dark:ring-white/10">
+<div class="w-[260px] vibrant-sidebar flex flex-col pt-5 pb-4 shrink-0 backdrop-blur-3xl z-10">
+<div class="px-5 mb-8 flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-[#FF5F57] border border-[#E0443E] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-[#FEBC2E] border border-[#D89E24] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-[#28C840] border border-[#1AAB29] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+</div>
+<div class="flex-1 px-3 space-y-6 overflow-y-auto no-scrollbar">
+<div>
+<h3 class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-3">Library</h3>
+<div class="space-y-0.5">
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">dns</span>
+<span class="text-sm">Active Connections</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">bookmark</span>
+<span class="text-sm">Saved Servers</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">history</span>
+<span class="text-sm">History</span>
+</button>
+</div>
+</div>
+</div>
+<div class="px-3 mt-4">
+<button class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg sidebar-item-active font-medium transition-colors group">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm">Settings</span>
+</button>
+</div>
+</div>
+<div class="flex-1 flex flex-col bg-white/40 dark:bg-black/40 backdrop-blur-xl relative">
+<div class="h-14 flex items-center justify-between px-8 border-b border-black/5 dark:border-white/5 shrink-0">
+<h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100 tracking-tight">Settings</h1>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar p-8">
+<div class="max-w-2xl mx-auto space-y-10">
+<section>
+<h3 class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4 px-1">General</h3>
+<div class="bg-white/50 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/10 shadow-sm backdrop-blur-sm overflow-hidden">
+<div class="flex items-center justify-between px-5 py-4 border-b border-black/5 dark:border-white/5 last:border-0">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-900 dark:text-gray-100">Launch at login</span>
+<span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Automatically start the client when you sign in</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 liquid-toggle-bg peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] liquid-toggle-dot after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+</label>
+</div>
+<div class="flex items-center justify-between px-5 py-4 border-b border-black/5 dark:border-white/5 last:border-0">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-900 dark:text-gray-100">Show in Menu Bar</span>
+<span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Show status icon in the macOS menu bar</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 liquid-toggle-bg peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] liquid-toggle-dot after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+</label>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4 px-1">Connections</h3>
+<div class="bg-white/50 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/10 shadow-sm backdrop-blur-sm overflow-hidden">
+<div class="flex items-center justify-between px-5 py-3 border-b border-black/5 dark:border-white/5 last:border-0">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-900 dark:text-gray-100">Default Protocol</span>
+</div>
+<div class="relative">
+<select class="liquid-input-container appearance-none pl-4 pr-10 py-1.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer min-w-[140px]">
+<option>SFTP (SSH)</option>
+<option>FTP</option>
+<option>FTPS</option>
+<option>WebDAV</option>
+<option>S3 Bucket</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between px-5 py-4 border-b border-black/5 dark:border-white/5 last:border-0">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-gray-900 dark:text-gray-100">Auto-reconnect</span>
+<span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Attempt to restore connection on drops</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 liquid-toggle-bg peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] liquid-toggle-dot after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+</label>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4 px-1">Support</h3>
+<div class="bg-white/50 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/10 shadow-sm backdrop-blur-sm p-6 flex flex-col items-center justify-center text-center gap-4">
+<div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-1">
+<span class="material-symbols-outlined text-2xl">pest_control</span>
+</div>
+<div class="max-w-xs">
+<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Encountered an issue?</h4>
+<p class="text-xs text-gray-500 dark:text-gray-400">Our team is ready to help squashing bugs and improving your experience.</p>
+</div>
+<button class="liquid-capsule-btn px-6 py-2.5 rounded-full text-white text-sm font-medium flex items-center gap-2 mt-2 w-full max-w-[200px] justify-center">
+<span class="material-symbols-outlined text-[18px]">bug_report</span>
+                                    Report a Bug
+                                </button>
+</div>
+</section>
+</div>
+</div>
+<div class="h-16 border-t border-black/5 dark:border-white/5 flex items-center justify-between px-6 shrink-0 bg-white/40 dark:bg-black/20 backdrop-blur-md">
+<button class="ruby-text-btn h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-red-500/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                        Quit
+                    </button>
+<div class="flex items-center gap-4">
+<button class="sapphire-btn h-9 px-5 rounded-lg text-white text-sm font-medium flex items-center gap-2 shadow-sm active:scale-95 transition-transform opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Add Connection
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</div></body></html>
+
+<!-- Liquid Glass Toolbar Popover - Final V2 -->
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FTP Client Main Management Window</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007AFF", // Updated to Apple HIG Blue
+                        "background-light": "#f5f5f7",
+                        "background-dark": "#000000",
+                        "glass-light": "rgba(255, 255, 255, 0.85)",
+                        "glass-dark": "rgba(30, 30, 30, 0.75)",
+                        "glass-border-light": "rgba(255, 255, 255, 0.5)",
+                        "glass-border-dark": "rgba(255, 255, 255, 0.15)",
+                        "sapphire-glass": "rgba(0, 122, 255, 0.15)",
+                        "sapphire-border": "rgba(0, 122, 255, 0.3)",
+                        "ruby-glass": "rgba(255, 59, 48, 0.15)",
+                        "ruby-border": "rgba(255, 59, 48, 0.3)",
+                        "sidebar-light": "rgba(235, 235, 240, 0.4)", // Very subtle sidebar background
+                        "sidebar-dark": "rgba(40, 40, 45, 0.4)",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                        body: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "0.75rem", // Slightly tighter for newer macOS look
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                    },
+                    backdropBlur: {
+                        'xs': '2px',
+                        'xl': '24px',
+                        '2xl': '50px', // Deeper blur
+                        '3xl': '80px', // Vibrant blur
+                    },
+                    boxShadow: {
+                        'glass-light': '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
+                        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.6)',
+                        'window': '0 20px 60px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
+                        'window-dark': '0 20px 60px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .liquid-window {
+            backdrop-filter: blur(60px) saturate(180%);
+            -webkit-backdrop-filter: blur(60px) saturate(180%);
+            box-shadow: var(--tw-shadow-window);
+        }
+        .dark .liquid-window {
+            box-shadow: var(--tw-shadow-window-dark);
+        }
+        .vibrant-sidebar {
+            background-color: var(--tw-colors-sidebar-light);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .dark .vibrant-sidebar {
+            background-color: var(--tw-colors-sidebar-dark);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .liquid-btn-small {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.4); 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .liquid-btn-small {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .liquid-btn-small:hover {
+            background: rgba(255, 255, 255, 0.65);
+            transform: scale(1.05);
+        }
+        .dark .liquid-btn-small:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .sapphire-btn {
+            background: #007AFF;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        .sapphire-btn:hover {
+            background: #006add;
+            transform: translateY(-0.5px);
+        }
+        .ruby-text-btn {
+            color: rgba(60, 60, 67, 0.6);
+            transition: all 0.2s ease;
+        }
+        .dark .ruby-text-btn {
+            color: rgba(235, 235, 245, 0.6);
+        }
+        .ruby-text-btn:hover {
+            color: #FF3B30;
+            background: rgba(255, 59, 48, 0.08);
+        }
+        .sidebar-item-active {
+            background: rgba(0, 122, 255, 0.12);
+            color: #007AFF;
+        }
+        .dark .sidebar-item-active {
+            background: rgba(10, 132, 255, 0.2);
+            color: #0A84FF;
+        }
+        .table-row-hover:hover {
+            background-color: rgba(0,0,0,0.03);
+        }
+        .dark .table-row-hover:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.4); }
+            70% { box-shadow: 0 0 0 3px rgba(52, 199, 89, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+        }
+        .status-pulse { animation: pulse-green 3s infinite; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center font-display p-6 relative overflow-hidden transition-colors duration-300 selection:bg-blue-500/30">
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[80%] h-[80%] rounded-full bg-blue-400/10 blur-[160px] dark:bg-blue-600/10 animate-pulse" style="animation-duration: 12s;"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full bg-indigo-300/10 blur-[160px] dark:bg-indigo-600/10 animate-pulse" style="animation-duration: 15s;"></div>
+</div>
+<button class="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-white/50 dark:bg-black/50 shadow-lg backdrop-blur-md border border-white/40 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:scale-105 transition-transform group" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">brightness_4</span>
+</button>
+<div class="relative z-10 w-full max-w-5xl h-[700px] flex">
+<div class="liquid-window w-full h-full rounded-2xl bg-glass-light dark:bg-glass-dark overflow-hidden flex relative ring-1 ring-black/5 dark:ring-white/10">
+<div class="w-[260px] vibrant-sidebar flex flex-col pt-5 pb-4 shrink-0 backdrop-blur-3xl z-10">
+<div class="px-5 mb-8 flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-[#FF5F57] border border-[#E0443E] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-[#FEBC2E] border border-[#D89E24] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-[#28C840] border border-[#1AAB29] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+</div>
+<div class="flex-1 px-3 space-y-6 overflow-y-auto no-scrollbar">
+<div>
+<h3 class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-3">Library</h3>
+<div class="space-y-0.5">
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg sidebar-item-active font-medium transition-colors group">
+<span class="material-symbols-outlined text-[20px]">dns</span>
+<span class="text-sm">Active Connections</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">bookmark</span>
+<span class="text-sm">Saved Servers</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">history</span>
+<span class="text-sm">History</span>
+</button>
+</div>
+</div>
+</div>
+<div class="px-3 mt-4">
+<button class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">settings</span>
+<span class="text-sm">Settings</span>
+</button>
+</div>
+</div>
+<div class="flex-1 flex flex-col bg-white/40 dark:bg-black/40 backdrop-blur-xl relative">
+<div class="h-14 flex items-center justify-between px-6 border-b border-black/5 dark:border-white/5 shrink-0">
+<h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100 tracking-tight">Active Connections</h1>
+</div>
+<div class="grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider select-none">
+<div class="col-span-1">Status</div>
+<div class="col-span-5">Server Name</div>
+<div class="col-span-3">Protocol</div>
+<div class="col-span-3 text-right">Speed / Action</div>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1">
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+<span class="material-symbols-outlined text-[18px]">public</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">Production Server</div>
+<div class="text-[11px] text-gray-500 truncate">192.168.1.42</div>
+</div>
+</div>
+<div class="col-span-3 text-sm text-gray-500 dark:text-gray-400">SFTP (SSH)</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-2 py-0.5 rounded">24 MB/s</span>
+<div class="flex gap-2">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-blue-500" title="Reconnect">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-red-500" title="Disconnect">
+<span class="material-symbols-outlined text-[16px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2 h-2 rounded-full bg-green-500 status-pulse"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+<span class="material-symbols-outlined text-[18px]">storage</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">Staging Database</div>
+<div class="text-[11px] text-gray-500 truncate">10.0.0.51</div>
+</div>
+</div>
+<div class="col-span-3 text-sm text-gray-500 dark:text-gray-400">FTP</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">8 MB/s</span>
+<div class="flex gap-2">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-blue-500" title="Reconnect">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-red-500" title="Disconnect">
+<span class="material-symbols-outlined text-[16px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 shrink-0">
+<span class="material-symbols-outlined text-[18px]">cloud</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-sm opacity-60 truncate">Backup Assets</div>
+<div class="text-[11px] text-gray-500 truncate">aws-east-1</div>
+</div>
+</div>
+<div class="col-span-3 text-sm text-gray-500 dark:text-gray-400">S3 Bucket</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs text-gray-400">—</span>
+<div class="flex gap-2">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-primary" title="Reconnect">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-red-500 opacity-50 cursor-not-allowed" disabled="" title="Disconnect">
+<span class="material-symbols-outlined text-[16px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-500 shrink-0">
+<span class="material-symbols-outlined text-[18px]">folder_shared</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-sm opacity-60 truncate">Legacy Share</div>
+<div class="text-[11px] text-gray-500 truncate">192.168.1.100</div>
+</div>
+</div>
+<div class="col-span-3 text-sm text-gray-500 dark:text-gray-400">SMB</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs text-gray-400">—</span>
+<div class="flex gap-2">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-primary" title="Reconnect">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:text-red-500 opacity-50 cursor-not-allowed" disabled="" title="Disconnect">
+<span class="material-symbols-outlined text-[16px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="h-16 border-t border-black/5 dark:border-white/5 flex items-center justify-between px-6 shrink-0 bg-white/40 dark:bg-black/20 backdrop-blur-md">
+<button class="ruby-text-btn h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-1.5 hover:bg-red-500/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                        Quit
+                    </button>
+<div class="flex items-center gap-4">
+<div class="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                            2 Active • 4 Saved
+                        </div>
+<button class="sapphire-btn h-9 px-5 rounded-lg text-white text-sm font-medium flex items-center gap-2 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Add Connection
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</div></body></html>
+
+<!-- Liquid Glass Toolbar Popover - Final V2 -->
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FTP Client Menu Bar Dropdown</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "macos-active": "#007AFF", // Native macOS Blue
+                        "macos-active-dark": "#1A6DCB",
+                        "menu-bg-light": "rgba(255, 255, 255, 0.85)",
+                        "menu-bg-dark": "rgba(30, 30, 30, 0.75)",
+                        "divider-light": "rgba(0, 0, 0, 0.08)",
+                        "divider-dark": "rgba(255, 255, 255, 0.12)",
+                        "text-primary-light": "#1d1d1f",
+                        "text-primary-dark": "#f5f5f7",
+                        "text-secondary-light": "#86868b",
+                        "text-secondary-dark": "#98989d",
+                    },
+                    fontFamily: {
+                        sans: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'macos-menu': '0 10px 40px rgba(0,0,0,0.15), 0 0 0 0.5px rgba(0,0,0,0.1)',
+                        'macos-menu-dark': '0 10px 40px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.1)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .macos-glass {
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+        }
+        .menu-item {
+            transition: background-color 0.05s ease;
+        }
+        .menu-item:hover {
+            background-color: var(--macos-active, #007AFF);
+            border-radius: 4px;
+        }
+        .menu-item:hover * {
+            color: white !important;
+            fill: white !important;
+        }
+        .menu-item:hover .shortcut {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+        .menu-item:active {
+            background-color: #0063ce;
+        }
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+            cursor: default;
+        }
+    </style>
+</head>
+<body class="bg-[#e0e0e0] dark:bg-[#222] min-h-screen flex items-start justify-center pt-20 font-sans p-6 relative overflow-hidden transition-colors duration-300 bg-[url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&amp;w=3270&amp;auto=format&amp;fit=crop')] bg-cover bg-center">
+<div class="absolute inset-0 bg-white/10 dark:bg-black/40 backdrop-blur-[2px]"></div>
+<button class="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-white/90 dark:bg-gray-800/90 shadow-lg backdrop-blur-md border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 hover:scale-105 transition-transform" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-symbols-outlined text-xl leading-none">dark_mode</span>
+</button>
+<div class="relative z-10 w-[270px]">
+<div class="macos-glass rounded-lg bg-menu-bg-light dark:bg-menu-bg-dark shadow-macos-menu dark:shadow-macos-menu-dark overflow-hidden flex flex-col p-1 border border-white/20 dark:border-white/10">
+<div class="flex flex-col gap-[2px]">
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2 overflow-hidden">
+<span class="w-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] font-bold text-text-primary-light dark:text-text-primary-dark group-hover:text-white leading-none">check</span>
+</span>
+<span class="text-[13px] font-medium text-text-primary-light dark:text-text-primary-dark group-hover:text-white truncate">Production FTP</span>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white hover:bg-black/10 dark:hover:bg-white/20 rounded-[3px] p-0.5 transition-colors" title="Disconnect">eject</span>
+</div>
+</div>
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2 overflow-hidden">
+<span class="w-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] font-bold text-text-primary-light dark:text-text-primary-dark group-hover:text-white leading-none">check</span>
+</span>
+<span class="text-[13px] font-medium text-text-primary-light dark:text-text-primary-dark group-hover:text-white truncate">Work Server</span>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white hover:bg-black/10 dark:hover:bg-white/20 rounded-[3px] p-0.5 transition-colors" title="Disconnect">eject</span>
+</div>
+</div>
+</div>
+<div class="h-[1px] bg-divider-light dark:bg-divider-dark mx-3 my-1"></div>
+<div class="flex flex-col gap-[2px]">
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2">
+<span class="w-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white leading-none">add</span>
+</span>
+<span class="text-[13px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white">Add New Connection...</span>
+</div>
+<span class="shortcut text-[12px] tracking-wide text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white/90">⌘N</span>
+</div>
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2">
+<span class="w-4 flex items-center justify-center">
+<span class="material-symbols-outlined text-[16px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white leading-none">table_view</span>
+</span>
+<span class="text-[13px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white">Open Manage Window</span>
+</div>
+<span class="shortcut text-[12px] tracking-wide text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white/90">⌘M</span>
+</div>
+</div>
+<div class="h-[1px] bg-divider-light dark:bg-divider-dark mx-3 my-1"></div>
+<div class="flex flex-col">
+<div class="menu-item group flex items-center justify-between px-3 py-1 rounded-[4px] cursor-default">
+<div class="flex items-center gap-2">
+<span class="w-4 flex items-center justify-center">
+</span>
+<span class="text-[13px] text-text-primary-light dark:text-text-primary-dark group-hover:text-white">Quit FTP Client</span>
+</div>
+<span class="shortcut text-[12px] tracking-wide text-text-secondary-light dark:text-text-secondary-dark group-hover:text-white/90">⌘Q</span>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>
+
+<!-- Liquid Glass Toolbar Popover - Final V2 -->
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FTP Client Main Management Window</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007AFF", 
+                        "background-light": "#f5f5f7",
+                        "background-dark": "#000000",
+                        "glass-light": "rgba(255, 255, 255, 0.65)",
+                        "glass-dark": "rgba(30, 30, 30, 0.6)",
+                        "glass-border-light": "rgba(255, 255, 255, 0.5)",
+                        "glass-border-dark": "rgba(255, 255, 255, 0.15)",
+                        "sidebar-light": "rgba(240, 240, 245, 0.3)", 
+                        "sidebar-dark": "rgba(40, 40, 45, 0.3)",
+                        "context-menu-light": "rgba(242, 242, 247, 0.85)",
+                        "context-menu-dark": "rgba(40, 40, 45, 0.85)",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                        body: ["Inter", "system-ui", "-apple-system", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                    },
+                    backdropBlur: {
+                        'xs': '2px',
+                        'xl': '24px',
+                        '2xl': '40px', 
+                        '3xl': '80px', 
+                    },
+                    boxShadow: {
+                        'glass-light': '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
+                        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.6)',
+                        'window': '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.08)',
+                        'window-dark': '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+                        'context': '0 16px 40px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)',
+                        'context-dark': '0 16px 40px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .liquid-window {
+            backdrop-filter: blur(60px) saturate(180%);
+            -webkit-backdrop-filter: blur(60px) saturate(180%);
+            box-shadow: var(--tw-shadow-window);
+        }
+        .dark .liquid-window {
+            box-shadow: var(--tw-shadow-window-dark);
+        }
+        .liquid-context-menu {
+            backdrop-filter: blur(40px) saturate(220%);
+            -webkit-backdrop-filter: blur(40px) saturate(220%);
+            box-shadow: var(--tw-shadow-context);
+        }
+        .dark .liquid-context-menu {
+            box-shadow: var(--tw-shadow-context-dark);
+        }
+        .vibrant-sidebar {
+            background-color: var(--tw-colors-sidebar-light);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .dark .vibrant-sidebar {
+            background-color: var(--tw-colors-sidebar-dark);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .liquid-btn-small {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .liquid-btn-small {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
+        .liquid-btn-small:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .dark .liquid-btn-small:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .sapphire-btn {
+            background-color: #007AFF;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+        .sapphire-btn:hover {
+            background-color: #0071e3;
+            transform: translateY(-0.5px);
+            box-shadow: 0 4px 10px rgba(0,122,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        .sapphire-btn:active {
+            transform: translateY(0px);
+            filter: brightness(0.95);
+        }
+        .ruby-text-btn {
+            color: rgba(60, 60, 67, 0.7);
+            transition: all 0.2s ease;
+        }
+        .dark .ruby-text-btn {
+            color: rgba(235, 235, 245, 0.7);
+        }
+        .ruby-text-btn:hover {
+            color: #FF3B30;
+            background: rgba(255, 59, 48, 0.1);
+        }
+        .sidebar-item-active {
+            background: rgba(0, 122, 255, 0.15);
+            color: #007AFF;
+        }
+        .dark .sidebar-item-active {
+            background: rgba(10, 132, 255, 0.25);
+            color: #0A84FF;
+        }
+        .table-row-hover:hover {
+            background-color: rgba(0, 122, 255, 0.06);
+        }
+        .dark .table-row-hover:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.4); }
+            70% { box-shadow: 0 0 0 3px rgba(52, 199, 89, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
+        }
+        .status-pulse { animation: pulse-green 3s infinite; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }.menu-item:hover {
+            background-color: #007AFF;
+            color: white !important;
+        }
+        .menu-item:hover .material-symbols-outlined {
+            color: white !important;
+        }
+        .menu-item-destructive:hover {
+            background-color: #FF3B30;
+            color: white !important;
+        }
+        .menu-item-destructive:hover .material-symbols-outlined {
+            color: white !important;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex items-center justify-center font-display p-6 relative overflow-hidden transition-colors duration-300 selection:bg-blue-500/30">
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[80%] h-[80%] rounded-full bg-blue-400/10 blur-[160px] dark:bg-blue-600/10 animate-pulse" style="animation-duration: 12s;"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full bg-indigo-300/10 blur-[160px] dark:bg-indigo-600/10 animate-pulse" style="animation-duration: 15s;"></div>
+</div>
+<button class="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-white/50 dark:bg-black/50 shadow-lg backdrop-blur-md border border-white/40 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:scale-105 transition-transform group" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-symbols-outlined text-xl group-hover:rotate-180 transition-transform duration-500">brightness_4</span>
+</button>
+<div class="relative z-10 w-full max-w-5xl h-[700px] flex">
+<div class="liquid-window w-full h-full rounded-2xl bg-glass-light dark:bg-glass-dark overflow-hidden flex relative ring-1 ring-black/5 dark:ring-white/10">
+<div class="w-[260px] vibrant-sidebar flex flex-col pt-5 pb-4 shrink-0 backdrop-blur-3xl z-10">
+<div class="px-5 mb-8 flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-[#FF5F57] border border-[#E0443E] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-[#FEBC2E] border border-[#D89E24] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+<div class="w-3 h-3 rounded-full bg-[#28C840] border border-[#1AAB29] hover:brightness-90 transition-all cursor-pointer shadow-sm"></div>
+</div>
+<div class="flex-1 px-3 space-y-6 overflow-y-auto no-scrollbar">
+<div>
+<h3 class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-3">Library</h3>
+<div class="space-y-0.5">
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg sidebar-item-active font-medium transition-colors group">
+<span class="material-symbols-outlined text-[20px]">dns</span>
+<span class="text-sm">Active Connections</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">bookmark</span>
+<span class="text-sm">Saved Servers</span>
+</button>
+<button class="w-full text-left flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">history</span>
+<span class="text-sm">History</span>
+</button>
+</div>
+</div>
+</div>
+<div class="px-3 mt-4">
+<button class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 font-medium transition-colors group">
+<span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">settings</span>
+<span class="text-sm">Settings</span>
+</button>
+</div>
+</div>
+<div class="flex-1 flex flex-col bg-white/40 dark:bg-black/40 backdrop-blur-xl relative">
+<div class="absolute top-[140px] left-[320px] z-50 min-w-[200px] rounded-xl liquid-context-menu bg-context-menu-light dark:bg-context-menu-dark p-1.5 flex flex-col origin-top-left animate-in fade-in zoom-in-95 duration-200 select-none ring-1 ring-black/5 dark:ring-white/10">
+<button class="menu-item w-full text-left flex items-center gap-3 px-2.5 py-1 rounded-[0.5rem] text-gray-800 dark:text-gray-200 text-[13px] font-medium transition-colors group">
+<span class="material-symbols-outlined text-[16px] text-gray-500 dark:text-gray-400 transition-colors">bookmark</span>
+                        Save
+                    </button>
+<button class="menu-item w-full text-left flex items-center gap-3 px-2.5 py-1 rounded-[0.5rem] text-gray-800 dark:text-gray-200 text-[13px] font-medium transition-colors group">
+<span class="material-symbols-outlined text-[16px] text-gray-500 dark:text-gray-400 transition-colors">edit</span>
+                        Rename
+                    </button>
+<button class="menu-item w-full text-left flex items-center gap-3 px-2.5 py-1 rounded-[0.5rem] text-gray-800 dark:text-gray-200 text-[13px] font-medium transition-colors group">
+<span class="material-symbols-outlined text-[16px] text-gray-500 dark:text-gray-400 transition-colors">key</span>
+                        Change Credentials
+                    </button>
+<div class="h-px bg-gray-400/20 dark:bg-white/10 my-1 mx-2.5"></div>
+<button class="menu-item-destructive w-full text-left flex items-center gap-3 px-2.5 py-1 rounded-[0.5rem] text-[#FF3B30] text-[13px] font-medium transition-colors group">
+<span class="material-symbols-outlined text-[16px] text-[#FF3B30] transition-colors">delete</span>
+                        Delete
+                    </button>
+</div>
+<div class="h-14 flex items-center justify-between px-6 border-b border-black/5 dark:border-white/5 shrink-0">
+<h1 class="text-lg font-semibold text-gray-800 dark:text-gray-100 tracking-tight">Active Connections</h1>
+</div>
+<div class="grid grid-cols-12 gap-4 px-6 py-3 border-b border-black/5 dark:border-white/5 text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider select-none">
+<div class="col-span-1">Status</div>
+<div class="col-span-5">Server Name</div>
+<div class="col-span-3">Protocol</div>
+<div class="col-span-3 text-right">Speed / Action</div>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1">
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default relative">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2.5 h-2.5 rounded-full bg-green-500 status-pulse"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-9 h-9 rounded-[10px] bg-blue-500/10 shadow-sm flex items-center justify-center text-blue-500 shrink-0 border border-blue-500/10">
+<span class="material-symbols-outlined text-[20px]">public</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-[13.5px] truncate">Production Server</div>
+<div class="text-[11px] text-gray-500 truncate">192.168.1.42</div>
+</div>
+</div>
+<div class="col-span-3 text-[13px] text-gray-500 dark:text-gray-400 font-medium">SFTP (SSH)</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-500/10 px-2.5 py-1 rounded-md">24 MB/s</span>
+<div class="flex gap-1.5">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-md text-gray-500 hover:text-blue-500" title="Reconnect">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-md text-gray-500 hover:text-red-500" title="Disconnect">
+<span class="material-symbols-outlined text-[18px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2.5 h-2.5 rounded-full bg-green-500 status-pulse"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-9 h-9 rounded-[10px] bg-orange-500/10 shadow-sm flex items-center justify-center text-orange-500 shrink-0 border border-orange-500/10">
+<span class="material-symbols-outlined text-[20px]">storage</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-[13.5px] truncate">Staging Database</div>
+<div class="text-[11px] text-gray-500 truncate">10.0.0.51</div>
+</div>
+</div>
+<div class="col-span-3 text-[13px] text-gray-500 dark:text-gray-400 font-medium">FTP</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-md">8 MB/s</span>
+<div class="flex gap-1.5">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-md text-gray-500 hover:text-blue-500" title="Reconnect">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-md text-gray-500 hover:text-red-500" title="Disconnect">
+<span class="material-symbols-outlined text-[18px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-9 h-9 rounded-[10px] bg-purple-500/10 shadow-sm flex items-center justify-center text-purple-500 shrink-0 border border-purple-500/10">
+<span class="material-symbols-outlined text-[20px]">cloud</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-[13.5px] opacity-60 truncate">Backup Assets</div>
+<div class="text-[11px] text-gray-500 truncate">aws-east-1</div>
+</div>
+</div>
+<div class="col-span-3 text-[13px] text-gray-500 dark:text-gray-400 font-medium">S3 Bucket</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs text-gray-400">—</span>
+<div class="flex gap-1.5">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-md text-gray-500 hover:text-primary" title="Reconnect">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-md text-gray-500 hover:text-red-500 opacity-50 cursor-not-allowed" disabled="" title="Disconnect">
+<span class="material-symbols-outlined text-[18px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group grid grid-cols-12 gap-4 items-center px-4 py-2 rounded-xl table-row-hover transition-colors cursor-default">
+<div class="col-span-1 flex items-center pl-1">
+<div class="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+</div>
+<div class="col-span-5 flex items-center gap-3">
+<div class="w-9 h-9 rounded-[10px] bg-pink-500/10 shadow-sm flex items-center justify-center text-pink-500 shrink-0 border border-pink-500/10">
+<span class="material-symbols-outlined text-[20px]">folder_shared</span>
+</div>
+<div class="min-w-0">
+<div class="font-medium text-gray-900 dark:text-gray-100 text-[13.5px] opacity-60 truncate">Legacy Share</div>
+<div class="text-[11px] text-gray-500 truncate">192.168.1.100</div>
+</div>
+</div>
+<div class="col-span-3 text-[13px] text-gray-500 dark:text-gray-400 font-medium">SMB</div>
+<div class="col-span-3 flex items-center justify-end gap-3">
+<span class="text-xs text-gray-400">—</span>
+<div class="flex gap-1.5">
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-md text-gray-500 hover:text-primary" title="Reconnect">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+<button class="liquid-btn-small w-7 h-7 flex items-center justify-center rounded-md text-gray-500 hover:text-red-500 opacity-50 cursor-not-allowed" disabled="" title="Disconnect">
+<span class="material-symbols-outlined text-[18px]">eject</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="h-16 border-t border-black/5 dark:border-white/5 flex items-center justify-between px-6 shrink-0 bg-white/40 dark:bg-black/20 backdrop-blur-md">
+<button class="ruby-text-btn h-9 px-3 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-red-500/10 transition-colors">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+                        Quit
+                    </button>
+<div class="flex items-center gap-4">
+<div class="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                            2 Active • 4 Saved
+                        </div>
+<button class="sapphire-btn h-9 px-4 pl-3 rounded-lg text-white text-[13px] font-medium flex items-center gap-2 shadow-sm active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                            Add Connection
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

@@ -14,46 +14,43 @@ struct FTPClientApp: App {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var statusItem: NSStatusItem?
-    private var popover: NSPopover?
+    private var statusItemController: StatusBarItemController?
+    private var trayMenuController: TrayMenuController?
     private let connectionManager = QuitAwareConnectionManager()
+    private let navigator: any NavigationPresenter
+
+    override init() {
+        var registry = NavigationViewRegistry()
+        Self.setupViewRegistry(&registry)
+        let presenter = RegistryNavigationPresenter(
+            registry: registry,
+            rootContainer: MainRootView.rootContainer
+        )
+        navigator = presenter
+        super.init()
+    }
+
+    nonisolated private static func setupViewRegistry(_ registry: inout NavigationViewRegistry) {
+        AddConnectionModalView.register(in: &registry)
+        MainRootView.register(in: &registry)
+        SettingsView.register(in: &registry)
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupMenuBar()
     }
 
     private func setupMenuBar() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        let viewModel = TrayViewModel(connectionManager: connectionManager, navigator: navigator)
+        trayMenuController = TrayMenuController(viewModel: viewModel)
 
-        if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "network", accessibilityDescription: "FTP Client")
-            button.image?.isTemplate = true
-            button.action = #selector(togglePopover)
-            button.target = self
-        }
-
-        let popover = NSPopover()
-        popover.contentSize = NSSize(width: 320, height: 400)
-        popover.setValue(true, forKeyPath: "shouldHideAnchor")
-
-        popover.behavior = .transient
-        popover.animates = false
-        popover.appearance = NSApp.effectiveAppearance
-        popover.contentViewController = NSHostingController(
-            rootView: TrayView(viewModel: TrayViewModel(connectionManager: connectionManager))
+        statusItemController = StatusBarItemController(
+            systemSymbolName: "network",
+            accessibilityDescription: "FTP Client",
+            action: nil,
+            target: nil,
+            menu: trayMenuController?.menu
         )
-        self.popover = popover
-    }
-
-    @objc private func togglePopover() {
-        guard let button = statusItem?.button, let popover = popover else { return }
-        if popover.isShown {
-            popover.performClose(nil)
-        } else {
-            NSApp.activate(ignoringOtherApps: true)
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
-        }
     }
 }
 
@@ -75,8 +72,8 @@ private final class QuitAwareConnectionManager: ConnectionManaging {
         fallback.disconnect(serverId: serverId)
     }
 
-    func presentAddServer() {
-        fallback.presentAddServer()
+    func addServer(_ request: NewConnectionRequest) {
+        fallback.addServer(request)
     }
 
     func quitApp() {

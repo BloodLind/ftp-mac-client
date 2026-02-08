@@ -4,6 +4,10 @@ import AppKit
 final class TrayMenuController: NSObject, NSMenuDelegate {
     let menu: NSMenu
     private let viewModel: TrayViewModel
+    private enum Layout {
+        static let serverListWidth: CGFloat = 260
+        static let maxVisibleServerRows: Int = 6
+    }
 
     init(viewModel: TrayViewModel) {
         self.viewModel = viewModel
@@ -28,10 +32,8 @@ final class TrayMenuController: NSObject, NSMenuDelegate {
             emptyItem.isEnabled = false
             menu.addItem(emptyItem)
         } else {
-            for server in servers {
-                let item = makeServerActionItem(for: server)
-                menu.addItem(item)
-            }
+            let item = makeScrollableServerListItem(for: servers)
+            menu.addItem(item)
         }
 
         menu.addItem(.separator())
@@ -66,29 +68,27 @@ final class TrayMenuController: NSObject, NSMenuDelegate {
         menu.addItem(quit)
     }
 
-    private func makeServerActionItem(for server: TrayViewModel.ServerItem) -> NSMenuItem {
+    private func makeScrollableServerListItem(for servers: [TrayViewModel.ServerItem]) -> NSMenuItem {
         let item = NSMenuItem()
-        let actionSymbolName = server.canDisconnect ? "eject" : "arrow.up.right"
-        let actionAccessibilityLabel = server.canDisconnect ? "Unmount" : "Connect"
-        let actionEnabled = server.canConnect || server.canDisconnect
-        item.view = TrayServerMenuItemView(
-            title: server.displayName,
-            isConnected: server.canDisconnect,
-            actionSymbolName: actionSymbolName,
-            actionAccessibilityLabel: actionAccessibilityLabel,
-            isActionEnabled: actionEnabled
-        ) { [weak self] in
-            guard let self else { return }
-            if server.canDisconnect {
-                self.viewModel.disconnect(serverId: server.id)
-            } else if server.canConnect {
-                self.viewModel.connect(serverId: server.id)
-            }
-            self.rebuildMenu()
+        item.view = TrayServerListMenuItemView(
+            servers: servers,
+            maxVisibleRows: Layout.maxVisibleServerRows,
+            listWidth: Layout.serverListWidth
+        ) { [weak self] server in
+            self?.performServerAction(for: server)
         }
         // Disable default menu-item selection so button clicks do not dismiss the menu.
         item.isEnabled = false
         return item
+    }
+
+    private func performServerAction(for server: TrayViewModel.ServerItem) {
+        if server.canDisconnect {
+            viewModel.disconnect(serverId: server.id)
+        } else if server.canConnect {
+            viewModel.connect(serverId: server.id)
+        }
+        rebuildMenu()
     }
 
     @objc private func addServerAction() {
@@ -105,8 +105,92 @@ final class TrayMenuController: NSObject, NSMenuDelegate {
 }
 
 @MainActor
+private final class TrayServerListMenuItemView: NSView {
+    private let listWidth: CGFloat
+    private let listHeight: CGFloat
+
+    init(
+        servers: [TrayViewModel.ServerItem],
+        maxVisibleRows: Int,
+        listWidth: CGFloat,
+        actionHandler: @escaping (TrayViewModel.ServerItem) -> Void
+    ) {
+        self.listWidth = listWidth
+        let visibleRows = max(1, min(servers.count, maxVisibleRows))
+        self.listHeight = CGFloat(visibleRows) * TrayServerMenuItemView.preferredHeight
+        super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
+
+        let scrollView = NSScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.drawsBackground = false
+        scrollView.borderType = .noBorder
+        scrollView.hasHorizontalScroller = false
+        scrollView.hasVerticalScroller = servers.count > maxVisibleRows
+        scrollView.autohidesScrollers = true
+        scrollView.scrollerStyle = .overlay
+        scrollView.verticalScrollElasticity = .none
+        addSubview(scrollView)
+
+        let rowWidth = listWidth - (scrollView.hasVerticalScroller ? 12 : 0)
+        let totalHeight = CGFloat(servers.count) * TrayServerMenuItemView.preferredHeight
+        let documentView = TrayMenuFlippedView(frame: NSRect(x: 0, y: 0, width: rowWidth, height: totalHeight))
+        scrollView.documentView = documentView
+
+        for (index, server) in servers.enumerated() {
+            let actionSymbolName = server.canDisconnect ? "eject" : "arrow.up.right"
+            let actionAccessibilityLabel = server.canDisconnect ? "Unmount" : "Connect"
+            let actionEnabled = server.canConnect || server.canDisconnect
+            let rowView = TrayServerMenuItemView(
+                title: server.displayName,
+                isConnected: server.canDisconnect,
+                actionSymbolName: actionSymbolName,
+                actionAccessibilityLabel: actionAccessibilityLabel,
+                isActionEnabled: actionEnabled,
+                rowWidth: rowWidth
+            ) {
+                actionHandler(server)
+            }
+            rowView.frame = NSRect(
+                x: 0,
+                y: CGFloat(index) * TrayServerMenuItemView.preferredHeight,
+                width: rowWidth,
+                height: TrayServerMenuItemView.preferredHeight
+            )
+            documentView.addSubview(rowView)
+        }
+
+        NSLayoutConstraint.activate([
+            scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            scrollView.topAnchor.constraint(equalTo: topAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            widthAnchor.constraint(equalToConstant: listWidth),
+            heightAnchor.constraint(equalToConstant: listHeight)
+        ])
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: listWidth, height: listHeight)
+    }
+}
+
+@MainActor
+private final class TrayMenuFlippedView: NSView {
+    override var isFlipped: Bool { true }
+}
+
+@MainActor
 private final class TrayServerMenuItemView: NSView {
+    static let preferredHeight: CGFloat = 28
+
     private let actionHandler: () -> Void
+    private let rowWidth: CGFloat
 
     init(
         title: String,
@@ -114,9 +198,11 @@ private final class TrayServerMenuItemView: NSView {
         actionSymbolName: String,
         actionAccessibilityLabel: String,
         isActionEnabled: Bool,
+        rowWidth: CGFloat = 260,
         actionHandler: @escaping () -> Void
     ) {
         self.actionHandler = actionHandler
+        self.rowWidth = rowWidth
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
 
@@ -168,7 +254,7 @@ private final class TrayServerMenuItemView: NSView {
             row.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
             row.topAnchor.constraint(equalTo: topAnchor, constant: 4),
             row.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4),
-            widthAnchor.constraint(equalToConstant: 260)
+            widthAnchor.constraint(equalToConstant: rowWidth)
         ])
 
         let rowButton = NSButton(title: "", target: self, action: #selector(didTapAction))
@@ -200,7 +286,7 @@ private final class TrayServerMenuItemView: NSView {
     }
 
     override var intrinsicContentSize: NSSize {
-        NSSize(width: 260, height: 28)
+        NSSize(width: rowWidth, height: Self.preferredHeight)
     }
 
     @objc private func didTapAction() {

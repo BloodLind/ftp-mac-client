@@ -108,7 +108,7 @@ extension MockConnection {
             MockConnection(
                 id: UUID(),
                 displayName: "Production Server",
-                host: "192.168.1.42",
+                host: "192.168.1.42 mounted at /Volumes/production",
                 protocolName: ConnectionProtocolType.sftp.displayName,
                 expectedSpeedLabel: "24 MB/s",
                 state: .connected(speedLabel: "24 MB/s")
@@ -116,26 +116,50 @@ extension MockConnection {
             MockConnection(
                 id: UUID(),
                 displayName: "Staging Database",
-                host: "10.0.0.51",
+                host: "10.0.0.51 mounted at /Volumes/staging-db",
                 protocolName: ConnectionProtocolType.ftp.displayName,
                 expectedSpeedLabel: "8 MB/s",
                 state: .connected(speedLabel: "8 MB/s")
             ),
             MockConnection(
                 id: UUID(),
-                displayName: "Backup Assets",
-                host: "aws-east-1",
+                displayName: "Backup Assets Bucket",
+                host: "aws-east-1 mounted at /Volumes/backup-assets",
                 protocolName: ConnectionProtocolType.s3.displayName,
-                expectedSpeedLabel: "4 MB/s",
-                state: .disconnected
+                expectedSpeedLabel: "11 MB/s",
+                state: .connected(speedLabel: "11 MB/s")
             ),
             MockConnection(
                 id: UUID(),
                 displayName: "Legacy Share",
-                host: "192.168.1.100",
+                host: "192.168.1.100 mounted at /Volumes/legacy-share",
                 protocolName: ConnectionProtocolType.smb.displayName,
                 expectedSpeedLabel: "6 MB/s",
-                state: .disconnected
+                state: .connected(speedLabel: "6 MB/s")
+            ),
+            MockConnection(
+                id: UUID(),
+                displayName: "Marketing CDN",
+                host: "cdn.marketing.internal mounted at /Volumes/marketing-cdn",
+                protocolName: ConnectionProtocolType.sftp.displayName,
+                expectedSpeedLabel: "14 MB/s",
+                state: .connected(speedLabel: "14 MB/s")
+            ),
+            MockConnection(
+                id: UUID(),
+                displayName: "Finance Reports",
+                host: "10.20.4.9 mounted at /Volumes/finance-reports",
+                protocolName: ConnectionProtocolType.ftp.displayName,
+                expectedSpeedLabel: "9 MB/s",
+                state: .connected(speedLabel: "9 MB/s")
+            ),
+            MockConnection(
+                id: UUID(),
+                displayName: "Design Archive",
+                host: "archive.design.example mounted at /Volumes/design-archive",
+                protocolName: ConnectionProtocolType.s3.displayName,
+                expectedSpeedLabel: "7 MB/s",
+                state: .connected(speedLabel: "7 MB/s")
             )
         ]
     }

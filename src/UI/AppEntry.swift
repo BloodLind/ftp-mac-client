@@ -27,7 +27,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             rootContainer: MainRootView.rootContainer
         )
         navigator = presenter
-        GlobalNavigation.presenter = presenter
         super.init()
     }
 
@@ -35,7 +34,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AddConnectionModalView.register(in: &registry)
         MainRootView.register(in: &registry)
         SettingsView.register(in: &registry)
-        TrayView.register(in: &registry)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -72,10 +70,6 @@ private final class QuitAwareConnectionManager: ConnectionManaging {
 
     func disconnect(serverId: UUID) {
         fallback.disconnect(serverId: serverId)
-    }
-
-    func presentAddServer() {
-        fallback.presentAddServer()
     }
 
     func addServer(_ request: NewConnectionRequest) {

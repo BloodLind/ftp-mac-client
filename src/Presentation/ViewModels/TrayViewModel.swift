@@ -8,7 +8,6 @@ final class TrayViewModel: NavigableViewModel {
     struct ServerItem: Identifiable {
         let id: UUID
         let displayName: String
-        let statusLabel: String
         let canConnect: Bool
         let canDisconnect: Bool
     }
@@ -30,7 +29,6 @@ final class TrayViewModel: NavigableViewModel {
                 ServerItem(
                     id: server.id,
                     displayName: server.displayName,
-                    statusLabel: server.statusLabel,
                     canConnect: server.canConnect,
                     canDisconnect: server.canDisconnect
                 )

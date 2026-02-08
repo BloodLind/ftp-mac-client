@@ -17,7 +17,3 @@ final class NoopNavigationPresenter: NavigationPresenter {
 
     func close<VM: NavigableResultViewModel<Result>, Result>(_ viewModel: VM, _ result: Result) {}
 }
-
-enum GlobalNavigation {
-    @MainActor static var presenter: NavigationPresenter = NoopNavigationPresenter()
-}

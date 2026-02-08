@@ -64,7 +64,6 @@ final class MockConnectionStore {
             ServerSummary(
                 id: connection.id,
                 displayName: connection.displayName,
-                statusLabel: connection.statusLabel,
                 canConnect: connection.canConnect,
                 canDisconnect: connection.canDisconnect
             )

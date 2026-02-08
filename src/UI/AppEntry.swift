@@ -17,6 +17,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusBarItemController?
     private var popoverController: TrayPopoverController?
     private let connectionManager = QuitAwareConnectionManager()
+    override init() {
+        var registry = NavigationViewRegistry()
+        Self.setupViewRegistry(&registry)
+        let presenter = RegistryNavigationPresenter(
+            registry: registry,
+            rootContainer: MainRootView.rootContainer
+        )
+        navigator = presenter
+        Self.navigationPresenter = presenter
+        GlobalNavigation.presenter = presenter
+        super.init()
+    }
+
+    nonisolated private static func setupViewRegistry(_ registry: inout NavigationViewRegistry) {
+        AddConnectionModalView.register(in: &registry)
+        MainRootView.register(in: &registry)
+        SettingsView.register(in: &registry)
+        TrayView.register(in: &registry)
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupMenuBar()
@@ -26,7 +45,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemController = StatusBarItemController(
             systemSymbolName: "network",
             action: #selector(togglePopover),
-            accessibilityDescription: "FTP Client",
+            accessibilityDescription: "FTP Client"
+        )
+        let viewModel = TrayViewModel(connectionManager: connectionManager, navigator: navigator)
+        trayPopoverController = TrayPopoverController(viewModel: viewModel, navigation: navigator)
     }
         )
             rootView: TrayView(viewModel: TrayViewModel(connectionManager: connectionManager)),
@@ -35,18 +57,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
             target: self
     @objc private func togglePopover() {
-        guard let button = statusItemController?.statusItem.button else { return }
-        popoverController?.toggle(relativeTo: button)
-
-    }
-
-    private func updatePopoverSize() {
-        guard let popover = popover, let hostingController = trayHostingController else { return }
-        hostingController.view.layoutSubtreeIfNeeded()
-        let fittingSize = hostingController.view.fittingSize
-        let width: CGFloat = 270
-        let height = max(1, fittingSize.height + 8)
-        popover.contentSize = NSSize(width: width, height: height)
+        guard let button = statusItem?.button else { return }
+        trayPopoverController?.toggle(relativeTo: button)
     }
 }
 

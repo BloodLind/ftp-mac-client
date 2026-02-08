@@ -1,10 +1,22 @@
 import SwiftUI
 
-struct TrayView: View {
-    @StateObject private var viewModel: TrayViewModel
+struct TrayView: NavigableView {
+    @StateObject var viewModel: TrayViewModel
+    let navigation: NavigationPresenter
 
-    init(viewModel: TrayViewModel) {
+    init(viewModel: TrayViewModel, navigation: NavigationPresenter) {
+        self.navigation = navigation
         _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    nonisolated static func register(in registry: inout NavigationViewRegistry) {
+        registry.register(
+            TrayViewModel.self,
+            mode: .container(side: .leftPanel),
+            title: "Tray"
+        ) { viewModel, navigation in
+            AnyView(TrayView(viewModel: viewModel, navigation: navigation))
+        }
     }
 
     var body: some View {
@@ -26,7 +38,7 @@ struct TrayView: View {
                     title: "Open Manage Window",
                     leadingSymbol: "tablecells",
                     shortcut: "⌘M",
-                    action: {}
+                    action: viewModel.openManageWindow
                 )
                 TrayMenuDivider()
                 TrayMenuRow(
@@ -40,23 +52,12 @@ struct TrayView: View {
         }
         .frame(width: 270)
         .fixedSize(horizontal: false, vertical: true)
-        .sheet(isPresented: $viewModel.isPresentingAddServer) {
-            AddConnectionModalView(
-                viewModel: AddConnectionViewModel(
-                    onCancel: { viewModel.isPresentingAddServer = false },
-                    onConnect: { request in
-                        viewModel.addServer(request)
-                        viewModel.isPresentingAddServer = false
-                    }
-                )
-            )
-        }
     }
 }
 
 struct TrayView_Previews: PreviewProvider {
     static var previews: some View {
-        TrayView(viewModel: TrayViewModel.preview())
+        TrayView(viewModel: TrayViewModel.preview(), navigation: NoopNavigationPresenter())
     }
 }
 

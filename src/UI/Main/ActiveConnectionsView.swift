@@ -36,7 +36,7 @@ struct ActiveConnectionsView: View {
 struct ActiveConnectionsView_Previews: PreviewProvider {
     static var previews: some View {
         ActiveConnectionsView(
-            connections: MainViewModel().connections,
+            connections: MainViewModel(settingsViewModel: SettingsViewModel(), navigation: NoopNavigationPresenter()).connections,
             onReconnect: { _ in },
             onDisconnect: { _ in }
         )

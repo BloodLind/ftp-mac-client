@@ -1,6 +1,10 @@
 import Foundation
 
-final class TrayViewModel: ObservableObject {
+
+@MainActor
+final class TrayViewModel: NavigableViewModel {
+    var navigation: any NavigationPresenter
+
     struct ServerItem: Identifiable {
         let id: UUID
         let displayName: String
@@ -10,12 +14,12 @@ final class TrayViewModel: ObservableObject {
     }
 
     @Published private(set) var servers: [ServerItem] = []
-    @Published var isPresentingAddServer: Bool = false
-
     private let connectionManager: ConnectionManaging
+ 
 
-    init(connectionManager: ConnectionManaging) {
+    init(connectionManager: ConnectionManaging, navigator: any NavigationPresenter) {
         self.connectionManager = connectionManager
+        self.navigation = navigator
         refresh()
     }
 
@@ -44,13 +48,19 @@ final class TrayViewModel: ObservableObject {
     }
 
     func presentAddServer() {
-        connectionManager.presentAddServer()
-        isPresentingAddServer = true
+        Task { @MainActor in
+            let viewModel = AddConnectionViewModel(navigationPresenter: navigation)
+            let result = await navigation.navigate(viewModel)
+
+            if case .connect(let request) = result {
+                connectionManager.addServer(request)
+            }
+            refresh()
+        }
     }
 
-    func addServer(_ request: NewConnectionRequest) {
-        connectionManager.addServer(request)
-        refresh()
+    func openManageWindow() {
+        navigation.navigate(MainViewModel(settingsViewModel: SettingsViewModel(), navigation: navigation))
     }
 
     func quitApp() {
@@ -58,6 +68,7 @@ final class TrayViewModel: ObservableObject {
     }
 
     static func preview() -> TrayViewModel {
-        TrayViewModel(connectionManager: PreviewConnectionManager())
+        TrayViewModel(
+            connectionManager: PreviewConnectionManager(), navigator: NoopNavigationPresenter())
     }
 }

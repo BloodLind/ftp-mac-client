@@ -26,7 +26,7 @@ struct SavedServersView: View {
 
 struct SavedServersView_Previews: PreviewProvider {
     static var previews: some View {
-        SavedServersView(servers: MainViewModel().savedServers, onConnect: { _ in })
+        SavedServersView(servers: MainViewModel(settingsViewModel: SettingsViewModel(), navigation: NoopNavigationPresenter()).savedServers, onConnect: { _ in })
             .frame(width: 700, height: 400)
     }
 }

@@ -1,6 +1,10 @@
 import Foundation
 
-final class MainViewModel: ObservableObject {
+
+@MainActor
+final class MainViewModel: NavigableViewModel {
+    var navigation: any NavigationPresenter
+
     @Published var selection: MainSection = .activeConnections
     @Published private(set) var connections: [ConnectionRowModel] = []
     @Published private(set) var savedServers: [ConnectionRowModel] = []
@@ -12,12 +16,15 @@ final class MainViewModel: ObservableObject {
 
     init(
         store: MockConnectionStore = .shared,
-        settingsViewModel: SettingsViewModel = SettingsViewModel()
+        settingsViewModel: SettingsViewModel,
+        navigation: any NavigationPresenter
     ) {
         self.store = store
         self.settingsViewModel = settingsViewModel
+        self.navigation = navigation
         refresh()
         seedHistory()
+        
     }
 
     var activeCount: Int {

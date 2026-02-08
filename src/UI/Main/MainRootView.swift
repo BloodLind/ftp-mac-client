@@ -1,57 +1,127 @@
 import AppKit
 import SwiftUI
 
-@MainActor
-struct MainRootView: View {
-    @StateObject private var viewModel: MainViewModel
-    @State private var isPresentingAddConnection = false
+struct MainRootView: NavigableView {
+    @MainActor
+    final class RootContainer: ObservableObject, RootNavigationContainer {
+        private struct StackItem {
+            let id: ObjectIdentifier
+            let view: AnyView
+        }
 
-    init(viewModel: MainViewModel = MainViewModel()) {
+        private var leftPanelItems: [StackItem] = []
+        private var mainViewItems: [StackItem] = []
+
+        @Published private(set) var leftPanelView: AnyView?
+        @Published private(set) var mainView: AnyView?
+
+        func push(_ view: AnyView, for id: ObjectIdentifier, on side: RootContainerSide) {
+            update(side: side) { items in
+                if let existingIndex = items.firstIndex(where: { $0.id == id }) {
+                    items.removeSubrange(existingIndex...)
+                }
+                items.append(StackItem(id: id, view: view))
+            }
+        }
+
+        func close(from id: ObjectIdentifier, on side: RootContainerSide) {
+            update(side: side) { items in
+                guard let index = items.firstIndex(where: { $0.id == id }) else {
+                    return
+                }
+                items.removeSubrange(index...)
+            }
+        }
+
+        private func update(side: RootContainerSide, mutate: (inout [StackItem]) -> Void) {
+            switch side {
+            case .leftPanel:
+                mutate(&leftPanelItems)
+                leftPanelView = leftPanelItems.last?.view
+            case .mainView:
+                mutate(&mainViewItems)
+                mainView = mainViewItems.last?.view
+            }
+        }
+    }
+
+    @MainActor static let rootContainer = RootContainer()
+
+    @StateObject var viewModel: MainViewModel
+    @ObservedObject private var rootNavigationContainer = MainRootView.rootContainer
+    let navigation: NavigationPresenter
+
+    init(viewModel: MainViewModel, navigation: NavigationPresenter) {
+        self.navigation = navigation
         _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    nonisolated static func register(in registry: inout NavigationViewRegistry) {
+        registry.register(
+            MainViewModel.self,
+            mode: .dedicated,
+            title: "Manage Connections"
+        ) { viewModel, navigation in
+            AnyView(MainRootView(viewModel: viewModel, navigation: navigation))
+        }
     }
 
     var body: some View {
         HStack(spacing: 0) {
-            MainSidebarView(selection: $viewModel.selection)
-            VStack(spacing: 0) {
-                MainHeaderView(title: viewModel.selection.title)
-                Divider()
-                MainContentView(
-                    selection: viewModel.selection,
-                    connections: viewModel.connections,
-                    savedServers: viewModel.savedServers,
-                    historyItems: viewModel.historyItems,
-                    settingsViewModel: viewModel.settingsViewModel,
-                    onReconnect: viewModel.reconnect,
-                    onDisconnect: viewModel.disconnect
-                )
-                Divider()
-                MainFooterView(
-                    activeCount: viewModel.activeCount,
-                    savedCount: viewModel.savedCount,
-                    onAddConnection: { isPresentingAddConnection = true },
-                    onQuit: { NSApplication.shared.terminate(nil) }
-                )
+            if let leftPanelView = rootNavigationContainer.leftPanelView {
+                leftPanelView
+                    .frame(width: 240)
+            } else {
+                MainSidebarView(selection: $viewModel.selection)
+            }
+
+            if let mainView = rootNavigationContainer.mainView {
+                mainView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack(spacing: 0) {
+                    MainHeaderView(title: viewModel.selection.title)
+                    Divider()
+                    MainContentView(
+                        selection: viewModel.selection,
+                        connections: viewModel.connections,
+                        savedServers: viewModel.savedServers,
+                        historyItems: viewModel.historyItems,
+                        settingsViewModel: viewModel.settingsViewModel,
+                        navigation: navigation,
+                        onReconnect: viewModel.reconnect,
+                        onDisconnect: viewModel.disconnect
+                    )
+                    Divider()
+                    MainFooterView(
+                        activeCount: viewModel.activeCount,
+                        savedCount: viewModel.savedCount,
+                        onAddConnection: presentAddConnection,
+                        onQuit: { NSApplication.shared.terminate(nil) }
+                    )
+                }
             }
         }
         .frame(minWidth: 900, minHeight: 600)
-        .sheet(isPresented: $isPresentingAddConnection) {
-            AddConnectionModalView(
-                viewModel: AddConnectionViewModel(
-                    onCancel: { isPresentingAddConnection = false },
-                    onConnect: { request in
-                        viewModel.addConnection(request)
-                        isPresentingAddConnection = false
-                    }
-                )
-            )
+    }
+
+    private func presentAddConnection() {
+        Task { @MainActor in
+            let addConnectionViewModel = AddConnectionViewModel(navigationPresenter: navigation)
+            let result = await navigation.navigate(addConnectionViewModel)
+            if case .connect(let request) = result {
+                viewModel.addConnection(request)
+            }
         }
     }
 }
 
 struct MainRootView_Previews: PreviewProvider {
     static var previews: some View {
-        MainRootView()
+        MainRootView(
+            viewModel: MainViewModel(settingsViewModel: SettingsViewModel(), navigation: NoopNavigationPresenter()),
+            navigation: NoopNavigationPresenter()
+        )
             .frame(width: 900, height: 600)
     }
 }
@@ -168,6 +238,7 @@ struct MainContentView: View {
     let savedServers: [ConnectionRowModel]
     let historyItems: [HistoryItemModel]
     @ObservedObject var settingsViewModel: SettingsViewModel
+    let navigation: NavigationPresenter
     let onReconnect: (UUID) -> Void
     let onDisconnect: (UUID) -> Void
 
@@ -185,7 +256,7 @@ struct MainContentView: View {
             case .history:
                 HistoryView(items: historyItems)
             case .settings:
-                SettingsView(viewModel: settingsViewModel)
+                SettingsView(viewModel: settingsViewModel, navigation: navigation)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -197,10 +268,11 @@ struct MainContentView_Previews: PreviewProvider {
     static var previews: some View {
         MainContentView(
             selection: .activeConnections,
-            connections: MainViewModel().connections,
-            savedServers: MainViewModel().savedServers,
-            historyItems: MainViewModel().historyItems,
+            connections: MainViewModel(settingsViewModel: SettingsViewModel(), navigation: NoopNavigationPresenter()).connections,
+            savedServers: MainViewModel(settingsViewModel: SettingsViewModel(),navigation: NoopNavigationPresenter()).savedServers,
+            historyItems: MainViewModel(settingsViewModel: SettingsViewModel(),navigation: NoopNavigationPresenter()).historyItems,
             settingsViewModel: SettingsViewModel(),
+            navigation: NoopNavigationPresenter(),
             onReconnect: { _ in },
             onDisconnect: { _ in }
         )

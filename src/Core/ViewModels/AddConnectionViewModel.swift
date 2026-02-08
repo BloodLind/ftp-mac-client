@@ -1,7 +1,12 @@
 import Foundation
 
+enum AddConnectionResult {
+    case cancelled
+    case connect(NewConnectionRequest)
+}
+
 @MainActor
-final class AddConnectionViewModel: ObservableObject {
+final class AddConnectionViewModel: NavigableResultViewModel<AddConnectionResult> {
     @Published var selectedProtocol: ConnectionProtocolType
     @Published var host: String
     @Published var port: String
@@ -11,9 +16,8 @@ final class AddConnectionViewModel: ObservableObject {
     @Published var saveConnection: Bool
     @Published var validationMessage: String?
 
-    private let onCancel: () -> Void
-    private let onConnect: (NewConnectionRequest) -> Void
-
+    typealias Input = Void
+    
     init(
         selectedProtocol: ConnectionProtocolType = .sftp,
         host: String = "",
@@ -22,8 +26,7 @@ final class AddConnectionViewModel: ObservableObject {
         password: String = "",
         connectionName: String = "",
         saveConnection: Bool = true,
-        onCancel: @escaping () -> Void,
-        onConnect: @escaping (NewConnectionRequest) -> Void
+        navigationPresenter: any NavigationPresenter
     ) {
         self.selectedProtocol = selectedProtocol
         self.host = host
@@ -32,8 +35,7 @@ final class AddConnectionViewModel: ObservableObject {
         self.password = password
         self.connectionName = connectionName
         self.saveConnection = saveConnection
-        self.onCancel = onCancel
-        self.onConnect = onConnect
+        super.init(cancelResult: .cancelled, navigation: navigationPresenter)
     }
 
     var canConnect: Bool {
@@ -46,7 +48,7 @@ final class AddConnectionViewModel: ObservableObject {
     }
 
     func cancel() {
-        onCancel()
+        close(.cancelled)
     }
 
     func connect() {
@@ -70,6 +72,6 @@ final class AddConnectionViewModel: ObservableObject {
             protocolType: selectedProtocol,
             saveConnection: saveConnection
         )
-        onConnect(request)
+        close(.connect(request))
     }
 }

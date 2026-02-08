@@ -1,8 +1,24 @@
 import AppKit
 import SwiftUI
 
-struct SettingsView: View {
+struct SettingsView: NavigableView {
     @ObservedObject var viewModel: SettingsViewModel
+    let navigation: NavigationPresenter
+
+    init(viewModel: SettingsViewModel, navigation: NavigationPresenter) {
+        self.viewModel = viewModel
+        self.navigation = navigation
+    }
+
+    nonisolated static func register(in registry: inout NavigationViewRegistry) {
+        registry.register(
+            SettingsViewModel.self,
+            mode: .container(side: .mainView),
+            title: "Settings"
+        ) { viewModel, navigation in
+            AnyView(SettingsView(viewModel: viewModel, navigation: navigation))
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -46,7 +62,7 @@ struct SettingsView: View {
 
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsView(viewModel: SettingsViewModel())
+        SettingsView(viewModel: SettingsViewModel(), navigation: NoopNavigationPresenter())
             .frame(width: 700, height: 500)
     }
 }

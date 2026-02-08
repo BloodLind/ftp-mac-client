@@ -1,7 +1,23 @@
 import SwiftUI
 
-struct AddConnectionModalView: View {
+struct AddConnectionModalView: NavigableView {
     @ObservedObject var viewModel: AddConnectionViewModel
+    let navigation: NavigationPresenter
+
+    init(viewModel: AddConnectionViewModel, navigation: NavigationPresenter) {
+        self.viewModel = viewModel
+        self.navigation = navigation
+    }
+
+    nonisolated static func register(in registry: inout NavigationViewRegistry) {
+        registry.register(
+            AddConnectionViewModel.self,
+            mode: .dedicated,
+            title: "Add Connection"
+        ) { viewModel, navigation in
+            AnyView(AddConnectionModalView(viewModel: viewModel, navigation: navigation))
+        }
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -25,10 +41,8 @@ struct AddConnectionModalView: View {
 struct AddConnectionModalView_Previews: PreviewProvider {
     static var previews: some View {
         AddConnectionModalView(
-            viewModel: AddConnectionViewModel(
-                onCancel: {},
-                onConnect: { _ in }
-            )
+            viewModel: AddConnectionViewModel(navigationPresenter: NoopNavigationPresenter()),
+            navigation: NoopNavigationPresenter()
         )
     }
 }
